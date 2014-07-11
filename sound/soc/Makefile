@@ -1,4 +1,7 @@
 snd-soc-core-objs := soc-core.o soc-dapm.o soc-jack.o soc-cache.o soc-utils.o
+ifeq ($(CONFIG_SOUND_DYN_DEBUG),y)
+EXTRA_CFLAGS += -DDEBUG
+endif
 
 obj-$(CONFIG_SND_SOC)	+= snd-soc-core.o
 obj-$(CONFIG_SND_SOC)	+= codecs/

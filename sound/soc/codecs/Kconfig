@@ -166,6 +166,10 @@ config SND_SOC_WL1271BT
 	tristate "WL1271 Bluetooth Codec support"
 	default n
 
+config SND_SOC_TLV320AIC12K
+	tristate "TLV320AIC12K Codec support"
+	default y
+
 config SND_SOC_WM8350
 	tristate
 

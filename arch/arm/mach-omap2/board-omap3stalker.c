@@ -549,7 +549,7 @@ static int __init omap3_stalker_gpmc_uart_init(void)
 		if (gpmc_cs_request(uart_a_cs, SZ_1M, &uart_a_base) < 0) {
 			printk(KERN_ERR "Failed to request GPMC mem"
 					"for DOUBLE UART(ST16C2550) A\n");
-			return;
+			return 0;
 		}
 		else{
 			printk("GPMC address:%lx gained\n",uart_a_base);
@@ -559,7 +559,7 @@ static int __init omap3_stalker_gpmc_uart_init(void)
 		if (gpmc_cs_request(uart_b_cs, SZ_1M, &uart_b_base) < 0) {
 			printk(KERN_ERR "Failed to request GPMC mem"
 					"for DOUBLE UART(ST16C2550) A\n");
-			return;
+			return 0;
 		}
 		else{
 			printk("GPMC address:%lx gained\n",uart_b_base);
@@ -577,7 +577,7 @@ static int __init omap3_stalker_gpmc_uart_init(void)
 		if (ret < 0) {
 			printk(KERN_ERR "Failed to request GPIO %d for ST16C2550 IRQ A\n",
 					uart_a_int);
-			return;
+			return 0;
 		}
 		
 		omap_mux_init_gpio(uart_b_int, OMAP_PIN_INPUT_PULLUP);
@@ -585,7 +585,7 @@ static int __init omap3_stalker_gpmc_uart_init(void)
 		if (ret < 0) {
 			printk(KERN_ERR "Failed to request GPIO %d for ST16C2550 IRQ B\n",
 					uart_b_int);
-			return;
+			return 0;
 		}
 		
 		gpio_direction_input(uart_a_int);
@@ -751,10 +751,26 @@ static struct platform_device keys_gpio = {
 
 static void __init omap3stalker_gpio_key(void)
 {
+    int i=0;
+    volatile int j=0;
 	if(board_model >= DEV35X_B1){
 		omap_mux_init_gpio(18, OMAP_PIN_INPUT_PULLUP);
 		platform_device_register(&keys_gpio);
 	}
+    omap_mux_init_gpio(105, OMAP_PIN_OUTPUT);
+    omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);
+    gpio_request(105, "TLV320AIC12K Reset");
+    gpio_request(106, "TLV320AIC12K Power Down");
+    gpio_direction_output(106, 1);
+    for(i=0;i<1000;i++)
+      j=i;
+    gpio_direction_output(105, 1);
+    for(i=0;i<1000;i++)
+      j=i;
+    gpio_direction_output(105, 0);
+    for(i=0;i<1000;i++)
+      j=i;
+    gpio_direction_output(105, 1);
 }
 /*twl4030
 **------------------------------------------------------------------------------

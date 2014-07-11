@@ -33,6 +33,11 @@ endchoice
 
 comment "OMAP Feature Selections"
 
+config OMAP_PLAT_DEBUG
+	bool "omap dev_dbg debug"
+	help
+	  Say Y here to enable debugging messages for omap dev_dbg .
+
 config OMAP_DEBUG_DEVICES
 	bool
 	help

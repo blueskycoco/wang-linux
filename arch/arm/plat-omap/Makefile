@@ -9,6 +9,9 @@ obj-m :=
 obj-n :=
 obj-  :=
 
+ifeq ($(CONFIG_OMAP_PLAT_DEBUG),y)
+EXTRA_CFLAGS += -DDEBUG
+endif
 # OCPI interconnect support for 1710, 1610 and 5912
 obj-$(CONFIG_ARCH_OMAP16XX) += ocpi.o
 

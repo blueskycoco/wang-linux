@@ -20,6 +20,11 @@ menuconfig SND_SOC
 
 if SND_SOC
 
+config SOUND_DYN_DEBUG
+	bool "sound dev_dbg debug"
+	help
+	  Say Y here to enable debugging messages for sound dev_dbg .
+
 config SND_SOC_AC97_BUS
 	bool
 

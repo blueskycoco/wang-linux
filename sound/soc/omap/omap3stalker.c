@@ -37,6 +37,10 @@
 #include <plat/control.h>
 #include "../codecs/wl1271bt.h"
 #endif
+#if defined(CONFIG_SND_SOC_TLV320AIC12K)
+#include <plat/control.h>
+#include "../codecs/tlv320aic12k.h"
+#endif
 
 static int omap3stalker_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
@@ -109,6 +113,33 @@ static struct snd_soc_ops omap3stalker_wl1271bt_pcm_ops = {
 
 #endif
 
+#if defined(CONFIG_SND_SOC_TLV320AIC12K)
+static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *substream,
+	struct snd_pcm_hw_params *params)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
+	int ret;
+
+	/* Set cpu DAI configuration for TLV320AIC12K codec */
+	ret = snd_soc_dai_set_fmt(cpu_dai,
+				  SND_SOC_DAIFMT_DSP_B |
+				  SND_SOC_DAIFMT_NB_NF |
+				  SND_SOC_DAIFMT_CBM_CFM);
+	if (ret < 0) {
+		printk(KERN_ERR "Can't set cpu DAI configuration for " \
+						"TLV320AIC12K codec \n");
+		return ret;
+	}
+
+	return 0;
+}
+
+static struct snd_soc_ops omap3stalker_tlv320aic12k_pcm_ops = {
+	.hw_params = omap3stalker_tlv320aic12k_pcm_hw_params,
+};
+
+#endif
 /* Digital audio interface glue - connects codec <--> CPU */
 static struct snd_soc_dai_link omap3stalker_dai[] = {
 	{
@@ -126,6 +157,16 @@ static struct snd_soc_dai_link omap3stalker_dai[] = {
 		.cpu_dai = &omap_mcbsp_dai[1],
 		.codec_dai = &wl1271bt_dai,
 		.ops = &omap3stalker_wl1271bt_pcm_ops,
+	},
+#endif
+#if defined(CONFIG_SND_SOC_TLV320AIC12K)
+	/* Connects TLV320AIC12K codec <--> CPU */
+	{
+		.name = "TLV320AIC12KPCM",
+		.stream_name = "TLV320AIC12K PCM",
+		.cpu_dai = &omap_mcbsp_dai[1],
+		.codec_dai = &tlv320aic12k_dai,
+		.ops = &omap3stalker_tlv320aic12k_pcm_ops,
 	},
 #endif
 };
@@ -156,7 +197,7 @@ static struct platform_device *omap3stalker_snd_device;
 static int __init omap3stalker_soc_init(void)
 {
 	int ret;
-#if defined(CONFIG_SND_SOC_WL1271BT)
+#if defined(CONFIG_SND_SOC_WL1271BT) || defined(CONFIG_SND_SOC_TLV320AIC12K)
 	u16 reg;
 	u32 val;
 #endif
@@ -173,7 +214,7 @@ static int __init omap3stalker_soc_init(void)
 		return -ENOMEM;
 	}
 
-#if defined(CONFIG_SND_SOC_WL1271BT)
+#if defined(CONFIG_SND_SOC_WL1271BT) || defined(CONFIG_SND_SOC_TLV320AIC12K)
 /*
  * Set DEVCONF0 register to connect
  * MCBSP1_CLKR -> MCBSP1_CLKX & MCBSP1_FSR -> MCBSP1_FSX
@@ -188,6 +229,9 @@ static int __init omap3stalker_soc_init(void)
 	omap3stalker_snd_devdata.dev = &omap3stalker_snd_device->dev;
 	*(unsigned int *)omap3stalker_dai[0].cpu_dai->private_data = 1;
 #if defined(CONFIG_SND_SOC_WL1271BT)
+	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
+#endif
+#if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
 #endif
 
