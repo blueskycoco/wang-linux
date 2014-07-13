@@ -40,6 +40,7 @@
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 #include <plat/control.h>
 #include "../codecs/tlv320aic12k.h"
+#include <linux/i2c.h>
 #endif
 
 static int omap3stalker_hw_params(struct snd_pcm_substream *substream,
@@ -129,6 +130,12 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 	if (ret < 0) {
 		printk(KERN_ERR "Can't set cpu DAI configuration for " \
 						"TLV320AIC12K codec \n");
+		return ret;
+	}
+	ret = snd_soc_dai_set_sysclk(cpu_dai, 0, 20400000,
+				     SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "dillon Can't set codec system clock\n");
 		return ret;
 	}
 
@@ -233,6 +240,24 @@ static int __init omap3stalker_soc_init(void)
 #endif
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
+	u8 data[3];
+	struct i2c_client  *i2c_device;
+	struct i2c_board_info tlv320aic12k_i2c_info = {
+	I2C_BOARD_INFO("tlv320aic12k", 0x40),
+	};
+	if(!i2c_get_adapter(2))	
+		printk("get i2c adapter failed\r\n");
+	else
+		printk("get i2c adapter ok\r\n");
+	i2c_device = i2c_new_device(i2c_get_adapter(2),&tlv320aic12k_i2c_info);	
+	data[0]=0x04;
+	data[1]=0x80|0x10;//write M
+	data[2]=0x1;//write N,P
+	printk("sent 0x04,0x90, %d\r\n",i2c_master_send(i2c_device,data,3));
+	//data[1]=0x1;//write N,P
+	//printk("sent 0x04,0x01, %d\r\n",i2c_master_send(i2c_device,data,2));
+	//i2c_unregister_device(i2c_device);
+
 #endif
 
 	ret = platform_device_add(omap3stalker_snd_device);

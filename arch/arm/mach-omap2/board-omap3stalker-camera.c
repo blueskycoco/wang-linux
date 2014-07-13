@@ -263,6 +263,7 @@ static int omap3stalkerdc_gpio_config(void)
 static int __init omap3stalker_add_dc(void)
 {
 	int err;
+#if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
 
 	tvp5146_i2c_board_info.addr = 0x5D;
 
@@ -278,7 +279,6 @@ static int __init omap3stalker_add_dc(void)
 	 * If more I2C devices are added, then each device information should
 	 * be registered with I2C using i2c_register_board_info().
 	 */
-#if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
 	err = i2c_register_board_info(TVP5146_I2C_BUSNUM,
 					&tvp5146_i2c_board_info, 1);
 	if (err) {

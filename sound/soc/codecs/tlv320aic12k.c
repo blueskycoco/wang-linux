@@ -32,13 +32,13 @@ struct snd_soc_dai tlv320aic12k_dai = {
 	.playback = {
 		.stream_name = "Playback",
 		.channels_min = 1,
-		.channels_max = 2,
+		.channels_max = 1,
 		.rates = AIC12K_RATES,
 		.formats = AIC12K_FORMATS,},
 	.capture = {
 		.stream_name = "Capture",
 		.channels_min = 1,
-		.channels_max = 2,
+		.channels_max = 1,
 		.rates = AIC12K_RATES,
 		.formats = AIC12K_FORMATS,},
 };
