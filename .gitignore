@@ -1,3 +1,5 @@
+check_in.sh
+make.sh
 ..tmp_kallsyms1.o.cmd
 ..tmp_kallsyms2.o.cmd
 ..tmp_kallsyms3.o.cmd
