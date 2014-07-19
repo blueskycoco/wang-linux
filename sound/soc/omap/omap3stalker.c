@@ -40,6 +40,7 @@
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 #include <plat/control.h>
 #include "../codecs/tlv320aic12k.h"
+#include <linux/i2c.h>
 #endif
 
 static int omap3stalker_hw_params(struct snd_pcm_substream *substream,
@@ -50,19 +51,20 @@ static int omap3stalker_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
 	int ret;
 
+	printk("\r\nomap3stalker_hw_params ==>\r\n");
 	/* Set codec DAI configuration */
-	ret = snd_soc_dai_set_fmt(codec_dai,
+	/*ret = snd_soc_dai_set_fmt(codec_dai,
 				  SND_SOC_DAIFMT_I2S |
 				  SND_SOC_DAIFMT_NB_NF |
 				  SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "Can't set codec DAI configuration\n");
 		return ret;
-	}
+	}*/
 
 	/* Set cpu DAI configuration */
 	ret = snd_soc_dai_set_fmt(cpu_dai,
-				  SND_SOC_DAIFMT_I2S |
+				  SND_SOC_DAIFMT_DSP_A |/*SND_SOC_DAIFMT_I2S |*/
 				  SND_SOC_DAIFMT_NB_NF |
 				  SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
@@ -78,6 +80,7 @@ static int omap3stalker_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 
+	printk("omap3stalker_hw_params <==\r\n");
 	return 0;
 }
 
@@ -121,16 +124,44 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
 	int ret;
 
+	printk("\r\n\r\n\r\nomap3stalker_tlv320aic12k_pcm_hw_params ==>\r\n");
 	/* Set cpu DAI configuration for TLV320AIC12K codec */
 	ret = snd_soc_dai_set_fmt(cpu_dai,
-				  SND_SOC_DAIFMT_DSP_B |
+				  SND_SOC_DAIFMT_DSP_A|
 				  SND_SOC_DAIFMT_NB_NF |
 				  SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "Can't set cpu DAI configuration for " \
 						"TLV320AIC12K codec \n");
 		return ret;
+	}/*
+	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKX_EXT, 0,
+				SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set CPU system clock OMAP_MCBSP_SYSCLK_CLKX_EXT\n");
+		return ret;
 	}
+	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_CLKR_SRC_CLKX, 0,
+				SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set CPU system clock OMAP_MCBSP_CLKR_SRC_CLKX\n");
+		return ret;
+	}
+
+	snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_FSR_SRC_FSX, 0,
+				SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set CPU system clock OMAP_MCBSP_FSR_SRC_FSX\n");
+		return ret;
+	}
+*/
+	/*ret = snd_soc_dai_set_sysclk(cpu_dai, 0, 256000,
+				     SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "dillon Can't set codec system clock\n");
+		return ret;
+	}*/
+	printk("omap3stalker_tlv320aic12k_pcm_hw_params <==\r\n");
 
 	return 0;
 }
@@ -146,7 +177,7 @@ static struct snd_soc_dai_link omap3stalker_dai[] = {
 		.name 		= "TWL4030",
 		.stream_name 	= "TWL4030",
 		.cpu_dai 	= &omap_mcbsp_dai[0],
-		.codec_dai 	= &twl4030_dai[TWL4030_DAI_HIFI],
+		.codec_dai 	= &twl4030_dai[/*TWL4030_DAI_HIFI*/TWL4030_DAI_VOICE],
 		.ops 		= &omap3stalker_ops,
 	},
 #if defined(CONFIG_SND_SOC_WL1271BT)
@@ -157,7 +188,7 @@ static struct snd_soc_dai_link omap3stalker_dai[] = {
 		.cpu_dai = &omap_mcbsp_dai[1],
 		.codec_dai = &wl1271bt_dai,
 		.ops = &omap3stalker_wl1271bt_pcm_ops,
-	},
+	}
 #endif
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	/* Connects TLV320AIC12K codec <--> CPU */
@@ -167,7 +198,7 @@ static struct snd_soc_dai_link omap3stalker_dai[] = {
 		.cpu_dai = &omap_mcbsp_dai[1],
 		.codec_dai = &tlv320aic12k_dai,
 		.ops = &omap3stalker_tlv320aic12k_pcm_ops,
-	},
+	}
 #endif
 };
 
@@ -233,6 +264,26 @@ static int __init omap3stalker_soc_init(void)
 #endif
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
+	u8 data[2];
+	struct i2c_client  *i2c_device;
+	struct i2c_board_info tlv320aic12k_i2c_info = {
+	I2C_BOARD_INFO("tlv320aic12k", 0x40),
+	};
+	if(!i2c_get_adapter(2))	
+		printk("get i2c adapter failed\r\n");
+	//else
+	//	printk("get i2c adapter ok\r\n");
+
+	i2c_device = i2c_new_device(i2c_get_adapter(2),&tlv320aic12k_i2c_info);	
+	data[0]=0x04;
+	data[1]=0x8A;//write M
+	i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x04,0x8a, %d\r\n",i2c_master_send(i2c_device,data,3));
+	data[1]=0x1;//write N,P
+	i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x04,0x01, %d\r\n",i2c_master_send(i2c_device,data,2));
+	i2c_unregister_device(i2c_device);
+
 #endif
 
 	ret = platform_device_add(omap3stalker_snd_device);
