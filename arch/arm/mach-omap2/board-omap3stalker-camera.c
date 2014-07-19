@@ -263,7 +263,6 @@ static int omap3stalkerdc_gpio_config(void)
 static int __init omap3stalker_add_dc(void)
 {
 	int err;
-#if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
 
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
 	tvp5146_i2c_board_info.addr = 0x5D;

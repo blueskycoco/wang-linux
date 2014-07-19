@@ -134,13 +134,13 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 		printk(KERN_ERR "Can't set cpu DAI configuration for " \
 						"TLV320AIC12K codec \n");
 		return ret;
-	}/*
-	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKX_EXT, 0,
+	}
+/*	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKX_EXT, 0,
 				SND_SOC_CLOCK_IN);
 	if (ret < 0) {
 		printk(KERN_ERR "can't set CPU system clock OMAP_MCBSP_SYSCLK_CLKX_EXT\n");
 		return ret;
-	}
+	}*/
 	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_CLKR_SRC_CLKX, 0,
 				SND_SOC_CLOCK_IN);
 	if (ret < 0) {
@@ -154,7 +154,7 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 		printk(KERN_ERR "can't set CPU system clock OMAP_MCBSP_FSR_SRC_FSX\n");
 		return ret;
 	}
-*/
+
 	/*ret = snd_soc_dai_set_sysclk(cpu_dai, 0, 256000,
 				     SND_SOC_CLOCK_IN);
 	if (ret < 0) {
