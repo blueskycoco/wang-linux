@@ -165,9 +165,32 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 
 	return 0;
 }
+static int omap3stalker_tlv320aic12k_pcm_hw_params2(struct snd_pcm_substream *substream,
+	struct snd_pcm_hw_params *params)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
+	int ret;
+
+	/* Set cpu DAI configuration for TLV320AIC12K codec */
+	ret = snd_soc_dai_set_fmt(cpu_dai,
+				  SND_SOC_DAIFMT_DSP_A|
+				  SND_SOC_DAIFMT_NB_NF |
+				  SND_SOC_DAIFMT_CBM_CFM);
+	if (ret < 0) {
+		printk(KERN_ERR "Can't set cpu DAI configuration for " \
+						"TLV320AIC12K codec \n");
+		return ret;
+	}
+
+	return 0;
+}
 
 static struct snd_soc_ops omap3stalker_tlv320aic12k_pcm_ops = {
 	.hw_params = omap3stalker_tlv320aic12k_pcm_hw_params,
+};
+static struct snd_soc_ops omap3stalker_tlv320aic12k_pcm_ops2 = {
+	.hw_params = omap3stalker_tlv320aic12k_pcm_hw_params2,
 };
 
 #endif
@@ -194,10 +217,26 @@ static struct snd_soc_dai_link omap3stalker_dai[] = {
 	/* Connects TLV320AIC12K codec <--> CPU */
 	{
 		.name = "TLV320AIC12KPCM",
-		.stream_name = "TLV320AIC12K PCM",
+		.stream_name = "TLV320AIC12K PCM 1",
 		.cpu_dai = &omap_mcbsp_dai[1],
 		.codec_dai = &tlv320aic12k_dai,
 		.ops = &omap3stalker_tlv320aic12k_pcm_ops,
+	},
+		/* Connects TLV320AIC12K codec <--> CPU */
+	{
+		.name = "TLV320AIC12KPCM",
+		.stream_name = "TLV320AIC12K PCM 2",
+		.cpu_dai = &omap_mcbsp_dai[2],
+		.codec_dai = &tlv320aic12k_dai,
+		.ops = &omap3stalker_tlv320aic12k_pcm_ops2,
+	},
+		/* Connects TLV320AIC12K codec <--> CPU */
+	{
+		.name = "TLV320AIC12KPCM",
+		.stream_name = "TLV320AIC12K PCM 3",
+		.cpu_dai = &omap_mcbsp_dai[3],
+		.codec_dai = &tlv320aic12k_dai,
+		.ops = &omap3stalker_tlv320aic12k_pcm_ops2,
 	}
 #endif
 };
@@ -264,6 +303,8 @@ static int __init omap3stalker_soc_init(void)
 #endif
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
+	*(unsigned int *)omap3stalker_dai[2].cpu_dai->private_data = 4; /* McBSP3 */
+	*(unsigned int *)omap3stalker_dai[3].cpu_dai->private_data = 3; /* McBSP4 */
 	u8 data[2];
 	struct i2c_client  *i2c_device;
 	struct i2c_board_info tlv320aic12k_i2c_info = {
@@ -293,7 +334,33 @@ static int __init omap3stalker_soc_init(void)
 	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 
 	i2c_unregister_device(i2c_device);
+	if(!i2c_get_adapter(3))	
+		printk("get i2c adapter failed\r\n");
+	//else
+	//	printk("get i2c adapter ok\r\n");
 
+	i2c_device = i2c_new_device(i2c_get_adapter(3),&tlv320aic12k_i2c_info);	
+	data[0]=0x04;
+	data[1]=0x8A;//write M
+	i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	data[1]=0x1;//write N,P
+	i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	data[0]=0x05;
+	data[1]=0x30;
+	i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	//data[1]=0x7e;//0x56
+	//i2c_master_send(i2c_device,data,2);
+	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	//data[1]=0xbb;
+	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+
+	i2c_unregister_device(i2c_device);
+	/* one gpio emulator to set codec register */
+
+	/* one gpio emulator to set codec register */
 #endif
 
 	ret = platform_device_add(omap3stalker_snd_device);
