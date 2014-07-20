@@ -128,7 +128,7 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params(struct snd_pcm_substream *sub
 	/* Set cpu DAI configuration for TLV320AIC12K codec */
 	ret = snd_soc_dai_set_fmt(cpu_dai,
 				  SND_SOC_DAIFMT_DSP_B|
-				  SND_SOC_DAIFMT_IB_NF |
+				  SND_SOC_DAIFMT_IB_IF |
 				  SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "Can't set cpu DAI configuration for " \
@@ -175,7 +175,7 @@ static int omap3stalker_tlv320aic12k_pcm_hw_params2(struct snd_pcm_substream *su
 	/* Set cpu DAI configuration for TLV320AIC12K codec */
 	ret = snd_soc_dai_set_fmt(cpu_dai,
 				  SND_SOC_DAIFMT_DSP_B|
-				  SND_SOC_DAIFMT_IB_NF |
+				  SND_SOC_DAIFMT_IB_IF |
 				  SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "Can't set cpu DAI configuration for " \
@@ -347,9 +347,9 @@ static int __init omap3stalker_soc_init(void)
 	data[1]=0x1;//write N,P
 	i2c_master_send(i2c_device,data,2);
 	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	data[0]=0x05;
-	data[1]=0x30;
-	i2c_master_send(i2c_device,data,2);
+	//data[0]=0x05;
+	//data[1]=0x30;
+	//i2c_master_send(i2c_device,data,2);
 	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 	//data[1]=0x7e;//0x56
 	//i2c_master_send(i2c_device,data,2);
