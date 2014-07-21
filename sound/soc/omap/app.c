@@ -233,6 +233,16 @@ int voice_route(int s,int t)
 	printf("second result %d\r\n",result);
 	return 0;	
 }
+int open_record()
+{
+	char command[256];
+	int result;
+	sprintf(command,"%s","/usr/local/alsa/bin/amixer -c 0 sset \'Analog Right Sub Mic\' cap");
+	printf("open_record %s\r\n",command);
+	result=system(command);
+	printf("open_record result %d\r\n",result);
+	return result;
+}
 int main(int argc,char *argv[])
 {
 	int i=0,k=0,m=0,next_write=0;
@@ -240,6 +250,7 @@ int main(int argc,char *argv[])
 	FILE *fp=NULL;
 	char *in=NULL;
 	printf("\r\nPhone System\r\n");
+	open_record();
 	if((g_fd_1=open_port(1))<0){
 		perror("open_port error 1");
 		return;
