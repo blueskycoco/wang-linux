@@ -303,8 +303,8 @@ static int __init omap3stalker_soc_init(void)
 #endif
 #if defined(CONFIG_SND_SOC_TLV320AIC12K)
 	*(unsigned int *)omap3stalker_dai[1].cpu_dai->private_data = 0; /* McBSP1 */
-	*(unsigned int *)omap3stalker_dai[2].cpu_dai->private_data = 4; /* McBSP3 */
-	*(unsigned int *)omap3stalker_dai[3].cpu_dai->private_data = 3; /* McBSP4 */
+	*(unsigned int *)omap3stalker_dai[2].cpu_dai->private_data = 3; /* McBSP4 */
+	*(unsigned int *)omap3stalker_dai[3].cpu_dai->private_data = 4; /* McBSP5 */
 	u8 data[2];
 	struct i2c_client  *i2c_device;
 	struct i2c_board_info tlv320aic12k_i2c_info = {
@@ -331,6 +331,7 @@ static int __init omap3stalker_soc_init(void)
 	//i2c_master_send(i2c_device,data,2);
 	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 	//data[1]=0xbb;
+	//i2c_master_send(i2c_device,data,2);
 	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 
 	i2c_unregister_device(i2c_device);
