@@ -759,32 +759,50 @@ static void __init omap3stalker_gpio_key(void)
 		platform_device_register(&keys_gpio);
 	}
 #endif
+	omap_mux_init_gpio(140, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(141, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(163, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(164, OMAP_PIN_OUTPUT);
+
     omap_mux_init_gpio(105, OMAP_PIN_OUTPUT);
     omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);
     omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
     omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
-    gpio_request(105, "TLV320AIC12K Reset");
+	gpio_request(140, "TLV320AIC12K Reset1");
+	gpio_request(141, "TLV320AIC12K Reset2");
+	gpio_request(163, "TLV320AIC12K Reset3");
+	gpio_request(164, "TLV320AIC12K Reset4");
+
+	gpio_request(105, "TLV320AIC12K Reset");
     gpio_request(106, "TLV320AIC12K Power Down");
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
-    gpio_direction_output(106, 1);
+    //for(i=0;i<5;i++){
+    gpio_direction_output(140, 1);
+    gpio_direction_output(141, 1);
+    gpio_direction_output(163, 1);
+    gpio_direction_output(164, 1);
+
     //gpio_direction_output(18, 1);
+
     //gpio_direction_output(20, 1);
 
-    for(i=0;i<1000;i++)
-      j=i;
     gpio_direction_output(105, 1);
-    for(i=0;i<10000;i++)
-      j=i;
+	msleep(300);
     gpio_direction_output(105, 0);
-    //gpio_direction_output(18, 0);
-    //gpio_direction_output(20, 0);
-
-    for(i=0;i<100000;i++)
-      j=i;
+    gpio_direction_output(141, 0);
+    gpio_direction_output(164, 0);
+	msleep(1000);
     gpio_direction_output(105, 1);
-    //gpio_direction_output(18, 1);
-    //gpio_direction_output(20, 1);
+    gpio_direction_output(141, 1);
+    gpio_direction_output(164, 1);
+	msleep(200);
+	gpio_direction_output(140, 1);
+	gpio_direction_output(163, 1);
+	msleep(100);
+	gpio_direction_output(140, 1);
+	gpio_direction_output(163, 1);
+    //	}
 }
 /*twl4030
 **------------------------------------------------------------------------------
