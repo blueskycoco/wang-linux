@@ -766,8 +766,8 @@ static void __init omap3stalker_gpio_key(void)
 
     omap_mux_init_gpio(105, OMAP_PIN_OUTPUT);
     omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);
-    omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
-    omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
+    //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
+    //omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
 	gpio_request(140, "TLV320AIC12K Reset1");
 	gpio_request(141, "TLV320AIC12K Reset2");
 	gpio_request(163, "TLV320AIC12K Reset3");
@@ -778,6 +778,10 @@ static void __init omap3stalker_gpio_key(void)
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
+    
+	gpio_direction_output(140, 0);
+	gpio_direction_output(163, 0);
+	msleep(20);
     gpio_direction_output(140, 1);
     gpio_direction_output(141, 1);
     gpio_direction_output(163, 1);
@@ -787,9 +791,7 @@ static void __init omap3stalker_gpio_key(void)
 
     //gpio_direction_output(20, 1);
 
-    gpio_direction_output(105, 1);
 	msleep(300);
-    gpio_direction_output(105, 0);
     gpio_direction_output(141, 0);
     gpio_direction_output(164, 0);
 	msleep(1000);
@@ -799,10 +801,15 @@ static void __init omap3stalker_gpio_key(void)
 	msleep(200);
 	gpio_direction_output(140, 1);
 	gpio_direction_output(163, 1);
-	msleep(100);
-	gpio_direction_output(140, 1);
-	gpio_direction_output(163, 1);
-    //	}
+	
+	gpio_direction_output(106, 1);	
+    gpio_direction_output(105, 1);
+	msleep(10);	
+    gpio_direction_output(105, 0);
+	msleep(10);	
+    gpio_direction_output(105, 1);
+	msleep(10);
+	//	}
 }
 /*twl4030
 **------------------------------------------------------------------------------
@@ -1344,10 +1351,10 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE0 | OMAP_PIN_INPUT),
 
 //mcbsp4
-	OMAP3_MUX(MCBSP4_DR, OMAP_MUX_MODE0 | OMAP_PIN_INPUT),
-	OMAP3_MUX(MCBSP4_DX, OMAP_MUX_MODE0 | OMAP_PIN_OUTPUT),
-	OMAP3_MUX(MCBSP4_FSX, OMAP_MUX_MODE0 | OMAP_PIN_INPUT),
-	OMAP3_MUX(MCBSP4_CLKX, OMAP_MUX_MODE0 | OMAP_PIN_INPUT),
+	OMAP3_MUX(GPMC_NCS5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT),
+	OMAP3_MUX(GPMC_NCS6, OMAP_MUX_MODE2 | OMAP_PIN_OUTPUT),
+	OMAP3_MUX(GPMC_NCS7, OMAP_MUX_MODE2 | OMAP_PIN_INPUT),
+	OMAP3_MUX(GPMC_NCS4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT),
 //mcbsp5
 	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
