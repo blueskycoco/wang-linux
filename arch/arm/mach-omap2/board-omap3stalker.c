@@ -778,7 +778,7 @@ static void __init omap3stalker_gpio_key(void)
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
-    
+    gpio_direction_output(106, 0);	
 	gpio_direction_output(140, 0);
 	gpio_direction_output(163, 0);
 	msleep(20);
@@ -802,7 +802,8 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_direction_output(140, 1);
 	gpio_direction_output(163, 1);
 	
-	gpio_direction_output(106, 1);	
+	gpio_direction_output(106, 1);
+	msleep(10);
     gpio_direction_output(105, 1);
 	msleep(10);	
     gpio_direction_output(105, 0);

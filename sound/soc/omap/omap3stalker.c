@@ -312,9 +312,7 @@ static int __init omap3stalker_soc_init(void)
 	};
 	if(!i2c_get_adapter(2))	
 		printk("get i2c adapter 2 failed\r\n");
-	else
-		printk("get i2c adapter 2 ok\r\n");
-
+	
 	i2c_device = i2c_new_device(i2c_get_adapter(2),&tlv320aic12k_i2c_info);	
 	/*data[0]=0x01;
 	data[1]=0x8A;//write M
@@ -327,51 +325,55 @@ static int __init omap3stalker_soc_init(void)
 	i2c_master_send(i2c_device,data,1);
 	i2c_master_recv(i2c_device,data,2);
 	printk("the 0x02=%x %x\r\n",data[0],data[1]);*/
-	data[0]=0x04;
-	data[1]=0x8A;//write M
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	data[1]=0x01;//write N,P
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	data[0]=0x05;
-	data[1]=0x3E;
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	data[1]=0x7e;//0x56
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//data[1]=0x83;//0xbb
-	//i2c_master_send(i2c_device,data,2);
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	if(i2c_device!=NULL)
+	{
+		data[0]=0x04;
+		data[1]=0x8A;//write M
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 1 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		data[1]=0x01;//write N,P
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 2 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		data[0]=0x05;
+		data[1]=0x3E;
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 3 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		data[1]=0x7e;//0x56
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 4 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		//data[1]=0x83;//0xbb
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 
-	i2c_unregister_device(i2c_device);
+		i2c_unregister_device(i2c_device);
+	}
 	if(!i2c_get_adapter(3))	
 		printk("get i2c adapter 3 failed\r\n");
-	else
-		printk("get i2c adapter 3 ok\r\n");
-
+	
 	i2c_device = i2c_new_device(i2c_get_adapter(3),&tlv320aic12k_i2c_info);	
-	data[0]=0x04;
-	data[1]=0x8A;//write M
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("11 sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	data[1]=0x1;//write N,P
-	if(2!=i2c_master_send(i2c_device,data,2))
-		printk("22 sent 0x%x,0x%x, %d failed\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//data[0]=0x05;
-	//data[1]=0x30;
-	//i2c_master_send(i2c_device,data,2);
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//data[1]=0x7e;//0x56
-	//i2c_master_send(i2c_device,data,2);
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-	//data[1]=0xbb;
-	//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+	if(i2c_device!=NULL)
+	{
+		data[0]=0x04;
+		data[1]=0x8A;//write M
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 5 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		data[1]=0x1;//write N,P
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 6 failed %x\r\n",i2c_master_send(i2c_device,data,2));
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[0]=0x05;
+		//data[1]=0x30;
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[1]=0x7e;//0x56
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[1]=0xbb;
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 
-	i2c_unregister_device(i2c_device);
+		i2c_unregister_device(i2c_device);
+	}
 	/* one gpio emulator to set codec register */
 
 	/* one gpio emulator to set codec register */
