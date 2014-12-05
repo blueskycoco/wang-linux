@@ -801,7 +801,7 @@ static void __init omap3stalker_gpio_key(void)
 	msleep(200);
 	gpio_direction_output(140, 1);
 	gpio_direction_output(163, 1);
-	
+	for(i=0;i<5;i++){
 	gpio_direction_output(106, 1);
 	msleep(10);
     gpio_direction_output(105, 1);
@@ -810,7 +810,7 @@ static void __init omap3stalker_gpio_key(void)
 	msleep(10);	
     gpio_direction_output(105, 1);
 	msleep(10);
-	//	}
+	}
 }
 /*twl4030
 **------------------------------------------------------------------------------
