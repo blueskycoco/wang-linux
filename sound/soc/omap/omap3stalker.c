@@ -23,6 +23,10 @@
 #include <sound/pcm.h>
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
+#include <linux/delay.h>
+
+
+#include <linux/gpio.h>
 
 #include <asm/mach-types.h>
 #include <plat/hardware.h>
@@ -264,6 +268,55 @@ static struct snd_soc_device omap3stalker_snd_devdata = {
 
 static struct platform_device *omap3stalker_snd_device;
 
+#define SDA 181
+#define SCL 178
+
+void send_data(unsigned char data)
+{
+	int i;
+	for(i=0;i<8;i++)
+	{
+		gpio_direction_output(SCL,0);
+		if((data&0x80)==0x80)
+			gpio_direction_output(SDA,1);
+		else
+			gpio_direction_output(SDA,0);
+		udelay(10);
+		gpio_direction_output(SCL,1);
+		udelay(10);
+		data=data<<1;
+	}
+}
+void gpio_i2c_init()
+{	
+	unsigned char addr=0x40;
+	unsigned char a=0x04;
+	unsigned char b=0x8a;
+	unsigned char c=0x01;
+	unsigned char tmp;
+	int i;
+	/*send start*/
+	gpio_direction_output(SCL,1);
+	gpio_direction_output(SDA,1);
+	udelay(10);
+	send_data(addr);
+	send_data(a);
+	send_data(b);
+	gpio_direction_output(SDA,0);
+	udelay(10);
+	gpio_direction_output(SDA,1);
+	udelay(100);
+	gpio_direction_output(SCL,1);
+	gpio_direction_output(SDA,1);
+	udelay(10);
+	send_data(addr);
+	send_data(a);
+	send_data(c);
+	gpio_direction_output(SDA,0);
+	udelay(10);
+	gpio_direction_output(SDA,1);
+	udelay(100);
+}
 static int __init omap3stalker_soc_init(void)
 {
 	int ret;
@@ -310,43 +363,6 @@ static int __init omap3stalker_soc_init(void)
 	struct i2c_board_info tlv320aic12k_i2c_info = {
 	I2C_BOARD_INFO("tlv320aic12k", 0x40),
 	};
-	if(!i2c_get_adapter(2))	
-		printk("get i2c adapter 2 failed\r\n");
-	
-	i2c_device = i2c_new_device(i2c_get_adapter(2),&tlv320aic12k_i2c_info);	
-	/*data[0]=0x01;
-	data[1]=0x8A;//write M
-	i2c_master_send(i2c_device,data,1);
-	i2c_master_recv(i2c_device,data,2);
-	printk("the 0x01=%x %x\r\n",data[0],data[1]);
-	
-	data[0]=0x02;
-	data[1]=0x8A;//write M
-	i2c_master_send(i2c_device,data,1);
-	i2c_master_recv(i2c_device,data,2);
-	printk("the 0x02=%x %x\r\n",data[0],data[1]);*/
-	if(i2c_device!=NULL)
-	{
-		data[0]=0x04;
-		data[1]=0x8A;//write M
-		if(2!=i2c_master_send(i2c_device,data,2))
-			printk("i2c_master_send 1 failed %d\r\n",i2c_master_send(i2c_device,data,2));
-		data[1]=0x01;//write N,P
-		if(2!=i2c_master_send(i2c_device,data,2))
-			printk("i2c_master_send 2 failed %d\r\n",i2c_master_send(i2c_device,data,2));
-		data[0]=0x05;
-		data[1]=0x3E;
-		if(2!=i2c_master_send(i2c_device,data,2))
-			printk("i2c_master_send 3 failed %d\r\n",i2c_master_send(i2c_device,data,2));
-		data[1]=0x7e;//0x56
-		if(2!=i2c_master_send(i2c_device,data,2))
-			printk("i2c_master_send 4 failed %d\r\n",i2c_master_send(i2c_device,data,2));
-		//data[1]=0x83;//0xbb
-		//i2c_master_send(i2c_device,data,2);
-		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-
-		i2c_unregister_device(i2c_device);
-	}
 	if(!i2c_get_adapter(3))	
 		printk("get i2c adapter 3 failed\r\n");
 	
@@ -374,8 +390,76 @@ static int __init omap3stalker_soc_init(void)
 
 		i2c_unregister_device(i2c_device);
 	}
-	/* one gpio emulator to set codec register */
+	if(!i2c_get_adapter(2))	
+		printk("get i2c adapter 2 failed\r\n");
+	
+	i2c_device = i2c_new_device(i2c_get_adapter(2),&tlv320aic12k_i2c_info);	
+	/*data[0]=0x01;
+	data[1]=0x8A;//write M
+	i2c_master_send(i2c_device,data,1);
+	i2c_master_recv(i2c_device,data,2);
+	printk("the 0x01=%x %x\r\n",data[0],data[1]);
+	
+	data[0]=0x02;
+	data[1]=0x8A;//write M
+	i2c_master_send(i2c_device,data,1);
+	i2c_master_recv(i2c_device,data,2);
+	printk("the 0x02=%x %x\r\n",data[0],data[1]);*/
+	if(i2c_device!=NULL)
+	{
+		data[0]=0x04;
+		data[1]=0x8A;//write M
+		if(2!=i2c_master_send(i2c_device,data,2))		
+			printk("i2c_master_send 1 failed %d\r\n",i2c_master_send(i2c_device,data,2));
+		data[1]=0x01;//write N,P
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 2 failed %d\r\n",i2c_master_send(i2c_device,data,2));
+		data[0]=0x05;
+		data[1]=0x3E;
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 3 failed %d\r\n",i2c_master_send(i2c_device,data,2));
+		data[1]=0x7e;//0x56
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 4 failed %d\r\n",i2c_master_send(i2c_device,data,2));
+		//data[1]=0x83;//0xbb
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 
+		i2c_unregister_device(i2c_device);
+	}
+	/* one gpio emulator to set codec register */
+	#if 0
+	//gpio_i2c_init();
+	#else
+	if(!i2c_get_adapter(4))	
+		printk("get i2c adapter 4 failed\r\n");
+	
+	i2c_device = i2c_new_device(i2c_get_adapter(4),&tlv320aic12k_i2c_info);	
+	if(i2c_device!=NULL)
+	{
+		
+		data[0]=0x04;
+		data[1]=0x8A;//write M
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 7 failed %d\r\n",i2c_master_send(i2c_device,data,2));
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		data[1]=0x1;//write N,P
+		if(2!=i2c_master_send(i2c_device,data,2))
+			printk("i2c_master_send 8 failed %d\r\n",i2c_master_send(i2c_device,data,2));}
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[0]=0x05;
+		//data[1]=0x30;
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[1]=0x7e;//0x56
+		//i2c_master_send(i2c_device,data,2);
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+		//data[1]=0xbb;
+		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
+
+		i2c_unregister_device(i2c_device);
+	
+	#endif
 	/* one gpio emulator to set codec register */
 #endif
 

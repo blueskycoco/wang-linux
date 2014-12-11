@@ -24,6 +24,7 @@
 #include <linux/leds.h>
 #include <linux/interrupt.h>
 #include <linux/ctype.h>
+#include <linux/i2c-gpio.h>
 
 #include <linux/spi/spi.h>
 #include <linux/spi/ads7846.h>
@@ -748,6 +749,109 @@ static struct platform_device keys_gpio = {
 		.platform_data	= &gpio_key_info,
 	},
 };
+#define SDA 181
+#define SCL 178
+
+void DelayMs(int delay)
+{
+	//volatile long i,j;
+	//for(i=0;i<delay*1000;i++)
+		//j=1;
+	udelay(10*delay);
+}
+
+void I2CWriteByte( unsigned char byte )
+{
+  unsigned char i;
+
+  for( i=0; i<8; i++ )
+  {
+    if( 0X80 & byte )
+      gpio_direction_output(SDA,1);
+    else
+      gpio_direction_output(SDA,0);
+    byte <<= 1;
+    DelayMs(1);
+
+    gpio_direction_output(SCL,1);
+    DelayMs(1);
+    gpio_direction_output(SCL,0);
+    //DelayMs(1);
+  }
+}
+unsigned char I2CSlaveAck( void )
+{
+  
+  unsigned int TimeOut;
+  unsigned char RetValue;
+	DelayMs(1);
+	gpio_direction_output(SCL,1);
+	
+    omap_mux_init_gpio(181, OMAP_PIN_INPUT_PULLUP);	
+  gpio_direction_input(SDA);
+  
+  DelayMs(1);
+ 
+  RetValue= gpio_get_value(SDA);
+  gpio_direction_output(SCL,0);
+  
+  omap_mux_init_gpio(181, OMAP_PIN_OUTPUT);   
+  //gpio_direction_output(SDA,0);
+  printk("ack %d\r\n",RetValue);
+  return RetValue;
+}
+void I2CStop( void )
+{
+  gpio_direction_output(SDA,0);
+  DelayMs(1);
+  gpio_direction_output(SCL,1);
+  DelayMs(1);
+  gpio_direction_output(SDA,1);
+  DelayMs(1);
+
+  //GPIO_ResetBits( GPIOA, E2PROM_SCL );
+}
+void I2CStart( void )
+{
+  gpio_direction_output(SDA,1);
+  DelayMs(1);
+  gpio_direction_output(SCL,1);
+  DelayMs(1);
+  gpio_direction_output(SDA,0);
+  DelayMs(1);
+
+  gpio_direction_output(SCL,0);
+}
+unsigned char E2promWriteByte( unsigned char addr, unsigned char data,unsigned char data1 )
+{
+
+  I2CStart();
+
+  I2CWriteByte( addr );
+  if( 0 != I2CSlaveAck() )
+  {
+  	printk("no ack after addr\r\n");
+	I2CStop();
+    return 0;
+  }
+  I2CWriteByte( data );
+  if( 0 != I2CSlaveAck() )
+  {
+  	printk("no ack after data\r\n");
+	I2CStop();
+    return 0;
+  }
+  I2CWriteByte( data1 );
+  if( 0 != I2CSlaveAck() )
+  {
+  	printk("no ack after data1\r\n");
+	I2CStop();
+    return 0;
+  }
+  I2CStop();
+
+  return 1;
+}
 
 static void __init omap3stalker_gpio_key(void)
 {
@@ -763,9 +867,11 @@ static void __init omap3stalker_gpio_key(void)
 	omap_mux_init_gpio(141, OMAP_PIN_OUTPUT);
 	omap_mux_init_gpio(163, OMAP_PIN_OUTPUT);
 	omap_mux_init_gpio(164, OMAP_PIN_OUTPUT);
-
     omap_mux_init_gpio(105, OMAP_PIN_OUTPUT);
-    omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);
+    omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);	
+	omap_mux_init_gpio(178, OMAP_PIN_INPUT);
+    omap_mux_init_gpio(181, OMAP_PIN_INPUT);	
+
     //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
     //omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
 	gpio_request(140, "TLV320AIC12K Reset1");
@@ -773,35 +879,32 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_request(163, "TLV320AIC12K Reset3");
 	gpio_request(164, "TLV320AIC12K Reset4");
 
-	gpio_request(105, "TLV320AIC12K Reset");
-    gpio_request(106, "TLV320AIC12K Power Down");
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
-    gpio_direction_output(106, 0);	
-	gpio_direction_output(140, 0);
-	gpio_direction_output(163, 0);
-	msleep(20);
-    gpio_direction_output(140, 1);
+    //gpio_direction_output(106, 0);	
     gpio_direction_output(141, 1);
-    gpio_direction_output(163, 1);
     gpio_direction_output(164, 1);
-
-    //gpio_direction_output(18, 1);
-
-    //gpio_direction_output(20, 1);
-
 	msleep(300);
     gpio_direction_output(141, 0);
     gpio_direction_output(164, 0);
 	msleep(1000);
-    gpio_direction_output(105, 1);
     gpio_direction_output(141, 1);
     gpio_direction_output(164, 1);
+
 	msleep(200);
 	gpio_direction_output(140, 1);
 	gpio_direction_output(163, 1);
-	for(i=0;i<5;i++){
+	msleep(200);
+	gpio_direction_output(140, 1);
+	gpio_direction_output(163, 1);
+	msleep(200);
+    gpio_direction_output(140, 1);
+	gpio_direction_output(163, 1);
+	
+	gpio_request(105, "TLV320AIC12K Reset");
+    gpio_request(106, "TLV320AIC12K Power Down");
+    gpio_direction_output(105, 1);
 	gpio_direction_output(106, 1);
 	msleep(10);
     gpio_direction_output(105, 1);
@@ -810,7 +913,14 @@ static void __init omap3stalker_gpio_key(void)
 	msleep(10);	
     gpio_direction_output(105, 1);
 	msleep(10);
-	}
+	
+	//gpio_request(178, "TLV320AIC12K SCL");
+    //gpio_request(181, "TLV320AIC12K SDA");
+	//gpio_direction_output(181,1);
+	//gpio_direction_output(178,1);
+	//E2promWriteByte(0x40,0x04,0x8a);	
+	//E2promWriteByte(0x40,0x04,0x01);
+	
 }
 /*twl4030
 **------------------------------------------------------------------------------
@@ -1229,6 +1339,23 @@ static struct i2c_board_info __initdata omap3stalker_i2c_boardinfo[] = {
 		.platform_data = &omap3stalker_twldata,
 	},
 };
+static struct i2c_gpio_platform_data acs5k_i2c_device_platdata = {
+	.sda_pin	= 181,
+	.scl_pin	= 178,
+	.sda_is_open_drain = 0,
+	.scl_is_open_drain = 0,
+	.udelay		= 100,
+};
+
+static struct platform_device acs5k_i2c_device = {
+	.name		= "i2c-gpio",
+	.id		= 4,
+	.num_resources	= 0,
+	.resource	= NULL,
+	.dev		= {
+		.platform_data	= &acs5k_i2c_device_platdata,
+	},
+};
 
 static int __init omap3_stalker_i2c_init(void)
 {
@@ -1255,7 +1382,9 @@ static int __init omap3_stalker_i2c_init(void)
 	}
 	else{
 		omap_register_i2c_bus(3, 400, NULL, 0);
-	}
+	}	
+	
+	platform_device_register(&acs5k_i2c_device);
 	return 0;
 }
 
@@ -1361,7 +1490,10 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
-
+	/*
+	OMAP3_MUX(MCSPI2_CLK, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+	OMAP3_MUX(MCSPI2_CS0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+	*/
 	{ .reg_offset = OMAP_MUX_TERMINATOR },
 };
 #else
