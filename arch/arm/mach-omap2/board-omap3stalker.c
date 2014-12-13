@@ -886,8 +886,8 @@ static void __init omap3stalker_gpio_key(void)
     gpio_direction_output(141, 1);
     gpio_direction_output(164, 1);
 	msleep(300);
-    gpio_direction_output(141, 0);
-    gpio_direction_output(164, 0);
+    gpio_direction_output(141, 1);
+    gpio_direction_output(164, 1);
 	msleep(1000);
     gpio_direction_output(141, 1);
     gpio_direction_output(164, 1);

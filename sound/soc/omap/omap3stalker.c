@@ -378,12 +378,12 @@ static int __init omap3stalker_soc_init(void)
 		if(2!=i2c_master_send(i2c_device,data,2))
 			printk("i2c_master_send 6 failed %d\r\n",i2c_master_send(i2c_device,data,2));
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-		//data[0]=0x05;
-		//data[1]=0x30;
-		//i2c_master_send(i2c_device,data,2);
+		data[0]=0x05;
+		data[1]=0x3e;
+		i2c_master_send(i2c_device,data,2);
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-		//data[1]=0x7e;//0x56
-		//i2c_master_send(i2c_device,data,2);
+		data[1]=0x7e;//0x56
+		i2c_master_send(i2c_device,data,2);
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 		//data[1]=0xbb;
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
@@ -447,12 +447,12 @@ static int __init omap3stalker_soc_init(void)
 		if(2!=i2c_master_send(i2c_device,data,2))
 			printk("i2c_master_send 8 failed %d\r\n",i2c_master_send(i2c_device,data,2));}
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-		//data[0]=0x05;
-		//data[1]=0x30;
-		//i2c_master_send(i2c_device,data,2);
+		data[0]=0x05;
+		data[1]=0x3e;
+		i2c_master_send(i2c_device,data,2);
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
-		//data[1]=0x7e;//0x56
-		//i2c_master_send(i2c_device,data,2);
+		data[1]=0x7e;//0x56
+		i2c_master_send(i2c_device,data,2);
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
 		//data[1]=0xbb;
 		//printk("sent 0x%x,0x%x, %d\r\n",data[0],data[1],i2c_master_send(i2c_device,data,2));
