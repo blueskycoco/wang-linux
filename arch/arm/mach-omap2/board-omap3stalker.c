@@ -749,109 +749,6 @@ static struct platform_device keys_gpio = {
 		.platform_data	= &gpio_key_info,
 	},
 };
-#define SDA 181
-#define SCL 178
-
-void DelayMs(int delay)
-{
-	//volatile long i,j;
-	//for(i=0;i<delay*1000;i++)
-		//j=1;
-	udelay(10*delay);
-}
-
-void I2CWriteByte( unsigned char byte )
-{
-  unsigned char i;
-
-  for( i=0; i<8; i++ )
-  {
-    if( 0X80 & byte )
-      gpio_direction_output(SDA,1);
-    else
-      gpio_direction_output(SDA,0);
-    byte <<= 1;
-    DelayMs(1);
-
-    gpio_direction_output(SCL,1);
-    DelayMs(1);
-    gpio_direction_output(SCL,0);
-    //DelayMs(1);
-  }
-}
-unsigned char I2CSlaveAck( void )
-{
-  
-  unsigned int TimeOut;
-  unsigned char RetValue;
-	DelayMs(1);
-	gpio_direction_output(SCL,1);
-	
-    omap_mux_init_gpio(181, OMAP_PIN_INPUT_PULLUP);	
-  gpio_direction_input(SDA);
-  
-  DelayMs(1);
- 
-  RetValue= gpio_get_value(SDA);
-  gpio_direction_output(SCL,0);
-  
-  omap_mux_init_gpio(181, OMAP_PIN_OUTPUT);   
-  //gpio_direction_output(SDA,0);
-  printk("ack %d\r\n",RetValue);
-  return RetValue;
-}
-void I2CStop( void )
-{
-  gpio_direction_output(SDA,0);
-  DelayMs(1);
-  gpio_direction_output(SCL,1);
-  DelayMs(1);
-  gpio_direction_output(SDA,1);
-  DelayMs(1);
-
-  //GPIO_ResetBits( GPIOA, E2PROM_SCL );
-}
-void I2CStart( void )
-{
-  gpio_direction_output(SDA,1);
-  DelayMs(1);
-  gpio_direction_output(SCL,1);
-  DelayMs(1);
-  gpio_direction_output(SDA,0);
-  DelayMs(1);
-
-  gpio_direction_output(SCL,0);
-}
-unsigned char E2promWriteByte( unsigned char addr, unsigned char data,unsigned char data1 )
-{
-
-  I2CStart();
-
-  I2CWriteByte( addr );
-  if( 0 != I2CSlaveAck() )
-  {
-  	printk("no ack after addr\r\n");
-	I2CStop();
-    return 0;
-  }
-  I2CWriteByte( data );
-  if( 0 != I2CSlaveAck() )
-  {
-  	printk("no ack after data\r\n");
-	I2CStop();
-    return 0;
-  }
-  I2CWriteByte( data1 );
-  if( 0 != I2CSlaveAck() )
-  {
-  	printk("no ack after data1\r\n");
-	I2CStop();
-    return 0;
-  }
-  I2CStop();
-
-  return 1;
-}
 
 static void __init omap3stalker_gpio_key(void)
 {
@@ -914,13 +811,13 @@ static void __init omap3stalker_gpio_key(void)
     gpio_direction_output(105, 1);
 	msleep(10);
 	
-	//gpio_request(178, "TLV320AIC12K SCL");
-    //gpio_request(181, "TLV320AIC12K SDA");
-	//gpio_direction_output(181,1);
-	//gpio_direction_output(178,1);
-	//E2promWriteByte(0x40,0x04,0x8a);	
-	//E2promWriteByte(0x40,0x04,0x01);
-	
+	omap_mux_init_gpio(103, OMAP_PIN_INPUT);
+	if (gpio_request(103, "cmx865a irq") < 0) {
+		printk(KERN_ERR "Failed to request GPIO%d for cmx865a IRQ\n",
+			103);
+		return;
+	}
+	gpio_direction_input(103);
 }
 /*twl4030
 **------------------------------------------------------------------------------
