@@ -705,7 +705,11 @@ config DS1620
 	  It is also possible to say M here to build it as a module (ds1620)
 	  It is recommended to be used on a NetWinder, but it is not a
 	  necessity.
-
+config CMX865A
+	tristate "CMX865A Driver"
+	---help---
+	  cmx865a for dm3730
+	  
 config NWBUTTON
 	tristate "NetWinder Button"
 	depends on ARCH_NETWINDER

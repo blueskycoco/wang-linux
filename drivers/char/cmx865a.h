@@ -6,6 +6,8 @@
 #define DTMF_MODE 0
 #define key_0 'D'
 #define CID_Received 1
+#define max_buff 256
+
 enum CID_recive_state
 {
 	 Waite,
@@ -53,5 +55,5 @@ enum CID_recive_state
 #define	DTMF_C			0x1f
 
 static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id);
-int cmx865a_init (void);
+void cmx865a_hw_init (void);
 #endif /* __CMX865A_H */

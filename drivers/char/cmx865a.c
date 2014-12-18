@@ -24,16 +24,17 @@
 
 static char cmx865a_output_buffer[32];	/* Stores data to write out of device */
 
-rt_uint8_t phone_state;
-#define CLK_PIN 141
-#define MOSI_PIN 142
-#define MISO_PIN 143
-#define CS_PIN 144
+unsigned char phone_state;
+#define CLK_PIN 17
+#define MOSI_PIN 14
+#define MISO_PIN 15
+#define CS_PIN 16
 void ms_delay()
 {
 	volatile int i,j;
-	for(i=0;i<10;i++)
-		j=0;
+	//for(i=0;i<10;i++)
+		//j=0;
+	udelay(100);
 }
 void CLK(bool ctl)
 {
@@ -60,11 +61,11 @@ unsigned char MISO()
 {
 	return gpio_get_value(MISO_PIN);
 }
-rt_uint8_t write_spi(rt_uint8_t data)
+unsigned char write_spi(unsigned char data)
 {
 	
-	rt_uint8_t i; 
-	rt_uint8_t Temp=0x00;
+	unsigned char i; 
+	unsigned char Temp=0x00;
 	unsigned char SDI; 
 	for (i = 0; i < 8; i++)
 	{
@@ -93,7 +94,7 @@ rt_uint8_t write_spi(rt_uint8_t data)
 	
 	return Temp; 
 }
-void write_cmx865a(rt_uint8_t addr,unsigned short data,rt_uint8_t len)
+void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 {
 	CS(0);
 	if(len==0)
@@ -107,10 +108,10 @@ void write_cmx865a(rt_uint8_t addr,unsigned short data,rt_uint8_t len)
 		}
 	CS(1);
 }
-void read_cmx865a(rt_uint8_t addr,rt_uint8_t* data,rt_uint8_t len)
+void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 {
 
-	rt_uint8_t i=0;
+	unsigned char i=0;
 	CS(0);
 	write_spi(addr);
 	data[0]=write_spi(0);
@@ -127,8 +128,9 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	unsigned char  j; 
 	static unsigned char  k=0; 
 	static unsigned char  fsk_long=0; 
+	static unsigned char CID_RX_count= 0;
 	read_cmx865a(Status_addr,&i,2);
-	
+	printk("cmx865a_irq=> %x\r\n",i);
 	if(DTMF_MODE)
 	{
 		if(i&0x0020)//DTMF
@@ -238,6 +240,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			}
 		}
 	}
+	return IRQ_HANDLED;
 }
 void cmx865a_hw_init(void)
 {
@@ -257,7 +260,7 @@ void cmx865a_hw_init(void)
 	}
 	else
 	{	
-		temp_int=temp_int<<9;
+		unsigned short temp_int=6<<9;
 		if (DTMF_MODE)
 		{
 			write_cmx865a(Receive_Mode_addr, Received_DTMF|temp_int,2);//????
@@ -272,10 +275,6 @@ void cmx865a_hw_init(void)
 	return ;
 }
 
-static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
-{
-	return IRQ_HANDLED;
-}
 static int cmx865a_read (struct file *filp, char __user *buffer,
 			size_t count, loff_t *ppos)
 {
@@ -297,18 +296,16 @@ static struct miscdevice cmx865a_misc_device = {
 static int __init cmx865a_init(void)
 {
 
-	printk (KERN_INFO "cmx865a_init \n", VERSION);
+	printk (KERN_INFO "cmx865a_init %s\n", VERSION);
 
 	if (misc_register (&cmx865a_misc_device)) {
-		printk (KERN_WARNING "nwcmx865a: Couldn't register device 10, "
-				"%d.\n", CMX865A_MINOR);
+		printk (KERN_WARNING "cmx865a: Couldn't register device 10, %d.\n", CMX865A_MINOR);
 		return -EBUSY;
 	}
 
-	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,
-			"cmx865a", NULL)) {
-		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",
-				IRQ_NETWINDER_BUTTON);
+	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
+	{
+		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
 	}

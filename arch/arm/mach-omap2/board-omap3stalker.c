@@ -768,6 +768,10 @@ static void __init omap3stalker_gpio_key(void)
     omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);	
 	omap_mux_init_gpio(178, OMAP_PIN_INPUT);
     omap_mux_init_gpio(181, OMAP_PIN_INPUT);	
+	omap_mux_init_gpio(14, OMAP_PIN_OUTPUT);	
+	omap_mux_init_gpio(16, OMAP_PIN_OUTPUT);	
+	omap_mux_init_gpio(17, OMAP_PIN_OUTPUT);	
+	omap_mux_init_gpio(15, OMAP_PIN_INPUT);	
 
     //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
     //omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
@@ -775,6 +779,13 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_request(141, "TLV320AIC12K Reset2");
 	gpio_request(163, "TLV320AIC12K Reset3");
 	gpio_request(164, "TLV320AIC12K Reset4");
+	gpio_request(14, "cmx865a simo");
+	gpio_request(15, "cmx865a somi");
+	gpio_request(16, "cmx865a cs");
+	gpio_request(17, "cmx865a clk");
+	gpio_direction_output(14, 1);
+	gpio_direction_output(16, 1);
+	gpio_direction_output(17, 1);
 
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
