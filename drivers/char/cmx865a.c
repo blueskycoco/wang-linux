@@ -130,7 +130,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned char  fsk_long=0; 
 	static unsigned char CID_RX_count= 0;
 	read_cmx865a(Status_addr,&i,2);
-	printk("cmx865a_irq=> %x\r\n",i);
+	//printk("cmx865a_irq=> %x\r\n",i);
 	if(DTMF_MODE)
 	{
 		if(i&0x0020)//DTMF
@@ -168,8 +168,8 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			read_cmx865a(Receive_Data_addr,&j,2);
 			
 		//	rt_kprintf("==> %d %x\r\n",j,j);
-			if(j>='0'&&j<='9')
-				printk(">>%c\r\n",j);
+			//if(j>='0'&&j<='9')
+			//	printk(">>%c\r\n",j);
 		switch(CID_state)
 		{
 			case Waite:
@@ -252,6 +252,7 @@ void cmx865a_hw_init(void)
 	write_cmx865a(G_Control_Command_addr, NORMAL,2);
 
 	read_cmx865a(Status_addr,&data,2);
+	printk("cmx865a_hw_init %x\r\n",data);
 	if(data&0x00ff)
 	{
 		printk("init cmx865a failed");
