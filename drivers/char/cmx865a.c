@@ -29,9 +29,9 @@ unsigned char phone_state;
 #define MOSI_PIN 14
 #define MISO_PIN 15
 #define CS_PIN 16
-void ms_delay()
+void ms_delay(void)
 {
-	volatile int i,j;
+//	volatile int i,j;
 	//for(i=0;i<10;i++)
 		//j=0;
 	udelay(1000);
@@ -57,7 +57,7 @@ void CS(bool ctl)
 	else
 		gpio_direction_output(CS_PIN, 0);
 }
-unsigned char MISO()
+unsigned char MISO(void)
 {
 	return gpio_get_value(MISO_PIN);
 }
@@ -111,7 +111,7 @@ void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 {
 
-	unsigned char i=0;
+//	unsigned char i=0;
 	CS(0);
 	write_spi(addr);
 	data[0]=write_spi(0);
@@ -128,10 +128,10 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	unsigned int  i,tmp; 
 	unsigned char  j; 
 	static unsigned char  k=0; 
-	static unsigned char  fsk_long=0; 
-	static unsigned char CID_RX_count= 0;
+	static unsigned short  fsk_long=0; 
+	static unsigned short CID_RX_count= 0;
 	//while(1){
-	read_cmx865a(Status_addr,&i,2);
+	read_cmx865a(Status_addr,(unsigned char *)&i,2);
 	//printk("cmx865a_irq=> %x\r\n",i);
 	if(DTMF_MODE)
 	{
@@ -160,7 +160,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 		}
 		else
 		{
-			read_cmx865a(Receive_Data_addr,&tmp,2);
+			read_cmx865a(Receive_Data_addr,(unsigned char *)&tmp,2);
 		}
 	}
 	else
@@ -169,9 +169,9 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 		{
 			read_cmx865a(Receive_Data_addr,&j,2);
 			
-			printk("==> %d %x\r\n",j,j);
-			if(j>='0'&&j<='9')
-				printk(">>%c\r\n",j);
+		//	rt_kprintf("==> %d %x\r\n",j,j);
+			//if(j>='0'&&j<='9')
+			//	printk(">>%c\r\n",j);
 		switch(CID_state)
 		{
 			case Waite:
@@ -265,8 +265,9 @@ void cmx865a_hw_init(void)
 	//data=0x00ff;
 	//write_cmx865a(Transmit_Data_addr, &data,1);
 
-	read_cmx865a(Status_addr,&data,2);
-	printk("cmx865a status %x\r\n",data);
+	read_cmx865a(Status_addr,(unsigned char *)&data,2);
+	printk("cmx865a_hw_init %x\r\n",data);
+
 	if(data&0x00ff)
 	{
 		printk("init cmx865a failed");
