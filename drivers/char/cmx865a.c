@@ -34,7 +34,7 @@ void ms_delay()
 	volatile int i,j;
 	//for(i=0;i<10;i++)
 		//j=0;
-	udelay(100);
+	udelay(1000);
 }
 void CLK(bool ctl)
 {
@@ -122,6 +122,7 @@ void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 	}
 	CS(1);
 }
+
 static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 {
 	unsigned int  i,tmp; 
@@ -129,8 +130,9 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned char  k=0; 
 	static unsigned char  fsk_long=0; 
 	static unsigned char CID_RX_count= 0;
+	//while(1){
 	read_cmx865a(Status_addr,&i,2);
-	printk("cmx865a_irq=> %x\r\n",i);
+	//printk("cmx865a_irq=> %x\r\n",i);
 	if(DTMF_MODE)
 	{
 		if(i&0x0020)//DTMF
@@ -167,7 +169,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 		{
 			read_cmx865a(Receive_Data_addr,&j,2);
 			
-		//	rt_kprintf("==> %d %x\r\n",j,j);
+			printk("==> %d %x\r\n",j,j);
 			if(j>='0'&&j<='9')
 				printk(">>%c\r\n",j);
 		switch(CID_state)
@@ -232,6 +234,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 				{
 					CID_state=Waite;
 					printk("finish receive phone num\r\n");
+					//return IRQ_HANDLED;
 				}
 				break;
 			}	
@@ -240,18 +243,30 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			}
 		}
 	}
+	//	}
 	return IRQ_HANDLED;
 }
+static irqreturn_t qcx2101_irq_handler (int irq, void *dev_id)
+{
+	//printk("New comming call ...\r\n");
+	//cmx865a_irq_handler(irq,dev_id);
+	return IRQ_HANDLED;
+}
+
 void cmx865a_hw_init(void)
 {
 	unsigned short data;
 	write_cmx865a(G_Reset_Command_addr,0,0);
 	msleep(5);
 	write_cmx865a(G_Control_Command_addr, Reset_CMX865|PowerUp,2);
-	msleep(50);
+	msleep(500);
 	write_cmx865a(G_Control_Command_addr, NORMAL,2);
+	msleep(500);
+	//data=0x00ff;
+	//write_cmx865a(Transmit_Data_addr, &data,1);
 
 	read_cmx865a(Status_addr,&data,2);
+	printk("cmx865a status %x\r\n",data);
 	if(data&0x00ff)
 	{
 		printk("init cmx865a failed");
@@ -264,14 +279,17 @@ void cmx865a_hw_init(void)
 		if (DTMF_MODE)
 		{
 			write_cmx865a(Receive_Mode_addr, Received_DTMF|temp_int,2);//????
-			printk("DTMF Re");
+			printk("DTMF Re\r\n");
 		}
 		else
 		{
 			write_cmx865a(Receive_Mode_addr, Received_FSK|temp_int,2);//????
-			printk("FSK Re");
+			printk("FSK Re\r\n");
 		}
 	}	
+	//do{
+	//read_cmx865a(Status_addr,&data,2);
+	//printk("cmx865a 2 status %x\r\n",data);}while(data&0x8000);
 	return ;
 }
 
@@ -298,6 +316,7 @@ static int __init cmx865a_init(void)
 
 	printk (KERN_INFO "cmx865a_init %s\n", VERSION);
 
+
 	if (misc_register (&cmx865a_misc_device)) {
 		printk (KERN_WARNING "cmx865a: Couldn't register device 10, %d.\n", CMX865A_MINOR);
 		return -EBUSY;
@@ -306,6 +325,13 @@ static int __init cmx865a_init(void)
 	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
 	{
 		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
+		misc_deregister (&cmx865a_misc_device);
+		return -EIO;
+	}
+	
+	if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
+	{
+		printk (KERN_WARNING "qcx2101: IRQ %d is not free.\n",OMAP_GPIO_IRQ(100));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
 	}
