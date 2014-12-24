@@ -19,22 +19,24 @@
 #include <asm/uaccess.h>
 #include <asm/irq.h>
 #include <asm/mach-types.h>
-
+#include <linux/spi/spi.h>
 #include "cmx865a.h"
 
 static char cmx865a_output_buffer[32];	/* Stores data to write out of device */
+struct spi_device g_spi;
 
 unsigned char phone_state;
+#if 0
 #define CLK_PIN 17
 #define MOSI_PIN 14
 #define MISO_PIN 15
 #define CS_PIN 16
 void ms_delay(void)
 {
-//	volatile int i,j;
-	//for(i=0;i<10;i++)
+	//volatile int i,j;
+	//for(i=0;i<1000;i++)
 		//j=0;
-	udelay(1000);
+	udelay(100);
 }
 void CLK(bool ctl)
 {
@@ -94,8 +96,10 @@ unsigned char write_spi(unsigned char data)
 	
 	return Temp; 
 }
+#endif
 void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 {
+#if 0
 	CS(0);
 	if(len==0)
 		write_spi(addr);
@@ -107,10 +111,50 @@ void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 		write_spi(data&0xff);
 		}
 	CS(1);
+#else
+	unsigned char tmp[3];
+	int count=0;
+	if(len==0)
+	{
+		tmp[0]=addr;
+		count=1;
+	}
+	else
+	{
+		tmp[0]=addr;
+		if(len==2)
+		{
+			tmp[1]=(data>>8)&0xff;
+			tmp[2]=data&0xff;
+			count=3;
+		}
+		else
+		{
+			tmp[1]=data&0xff;
+			count=2;
+		}
+			
+	}
+	#if 0
+	struct spi_transfer	t = {
+			.tx_buf		= tmp,
+			.len		= count,
+			.cs_change  = 0,
+		};
+	struct spi_message	m;
+
+	spi_message_init(&m);
+	spi_message_add_tail(&t, &m);
+	ssize_t status= spi_sync(&g_spi, &m);
+	#else
+	ssize_t status=spi_write(&g_spi,tmp,count);
+	#endif
+		printk("spi write %d\r\n",status);
+#endif
 }
 void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 {
-
+#if 0
 //	unsigned char i=0;
 	CS(0);
 	write_spi(addr);
@@ -121,6 +165,15 @@ void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 		data[0]=write_spi(0);
 	}
 	CS(1);
+#else
+unsigned char tx[3]={0,0,0};
+tx[0]=addr;
+ssize_t status=spi_write_then_read(&g_spi, tx, len+1, data, len);
+if(len==2)	
+	printk("spi read  %d ==>%d %d\r\n",status,data[0],data[1]);
+else
+	printk("spi read  %d ==>%d\r\n",status,data[0]);
+#endif
 }
 
 static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
@@ -130,8 +183,9 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned char  k=0; 
 	static unsigned short  fsk_long=0; 
 	static unsigned short CID_RX_count= 0;
+	static enum CID_recive_state CID_state=0;
 	//while(1){
-	read_cmx865a(Status_addr,(unsigned char *)&i,2);
+	read_cmx865a(Status_addr,&i,2);
 	//printk("cmx865a_irq=> %x\r\n",i);
 	if(DTMF_MODE)
 	{
@@ -167,11 +221,11 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	{
 		if(i&0x0040)//FSK
 		{
-			read_cmx865a(Receive_Data_addr,&j,2);
 			
-		//	rt_kprintf("==> %d %x\r\n",j,j);
+			read_cmx865a(Receive_Data_addr,&j,1);
+			printk("%d==> %x\r\n",CID_state,j);
 			//if(j>='0'&&j<='9')
-			//	printk(">>%c\r\n",j);
+				//printk(">>%c\r\n",j);
 		switch(CID_state)
 		{
 			case Waite:
@@ -182,6 +236,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					if(k>2)
 					{
 						k=0;
+						printk("==>Recived_55\r\n");
 						CID_state=Recived_55;
 					}
 				}
@@ -195,10 +250,12 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			{
 				if(j==0x02)
 				{
+				printk("==>Recived_02 1\r\n");
 					CID_state=Recived_02;
 				}
 				else if(j==0x04)
 				{
+				printk("==>Recived_02 2\r\n");
 					CID_state=Recived_02;
 				}
 				break;
@@ -214,6 +271,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					fsk_long=max_buff;
 				}
 				CID_RX_count=0;
+				printk("==>Recived_long\r\n");
 				CID_state=Recived_long;
 				break;
 			}	
@@ -311,6 +369,35 @@ static struct miscdevice cmx865a_misc_device = {
 	"cmx865a",
 	&cmx865a_fops,
 };
+static int cmx865a_probe(struct spi_device *spi)   
+{   
+    int ret = 0;  
+    spi->bits_per_word = 8;
+	spi->mode = SPI_MODE_0;
+	ret = spi_setup(spi);
+	if (ret < 0)
+	{
+		printk("cmx865a_probe failed %d\r\n",ret);
+		return ret;
+	}
+	g_spi=*spi;
+	printk("cmx865a_probe ok\r\n");
+    return 0;   
+}   
+
+static int __devexit cmx865a_remove(struct spi_device *spi)
+{
+	return 0;
+}
+
+static struct spi_driver   cmx865a_driver = { 
+.driver = {
+        .name   ="cmx865a",
+        .owner  = THIS_MODULE,
+    },
+    .probe  = cmx865a_probe,
+    .remove =__devexit_p(cmx865a_remove),
+};
 
 static int __init cmx865a_init(void)
 {
@@ -322,13 +409,14 @@ static int __init cmx865a_init(void)
 		printk (KERN_WARNING "cmx865a: Couldn't register device 10, %d.\n", CMX865A_MINOR);
 		return -EBUSY;
 	}
+	spi_register_driver(&cmx865a_driver);
 
-	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
+	/*if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
 	{
 		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
-	}
+	}*/
 	
 	if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
 	{
@@ -343,7 +431,9 @@ static int __init cmx865a_init(void)
 static void __exit cmx865a_exit (void) 
 {
 	free_irq (OMAP_GPIO_IRQ(103), NULL);
+	free_irq (OMAP_GPIO_IRQ(100), NULL);
 	misc_deregister (&cmx865a_misc_device);
+	spi_unregister_driver(&cmx865a_driver);
 }
 
 

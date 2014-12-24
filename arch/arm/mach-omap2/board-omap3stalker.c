@@ -768,10 +768,10 @@ static void __init omap3stalker_gpio_key(void)
     omap_mux_init_gpio(106, OMAP_PIN_OUTPUT);	
 	omap_mux_init_gpio(178, OMAP_PIN_INPUT);
     omap_mux_init_gpio(181, OMAP_PIN_INPUT);	
-	omap_mux_init_gpio(14, OMAP_PIN_OUTPUT);	
-	omap_mux_init_gpio(16, OMAP_PIN_OUTPUT);	
-	omap_mux_init_gpio(17, OMAP_PIN_OUTPUT);	
-	omap_mux_init_gpio(15, OMAP_PIN_INPUT);
+	//omap_mux_init_gpio(14, OMAP_PIN_OUTPUT);	
+	//omap_mux_init_gpio(16, OMAP_PIN_OUTPUT);	
+	//omap_mux_init_gpio(17, OMAP_PIN_OUTPUT);	
+	//omap_mux_init_gpio(15, OMAP_PIN_INPUT);
 	omap_mux_init_gpio(99, OMAP_PIN_OUTPUT);
 
     //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
@@ -780,14 +780,14 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_request(141, "TLV320AIC12K Reset2");
 	gpio_request(163, "TLV320AIC12K Reset3");
 	gpio_request(164, "TLV320AIC12K Reset4");
-	gpio_request(14, "cmx865a simo");
-	gpio_request(15, "cmx865a somi");
-	gpio_request(16, "cmx865a cs");
-	gpio_request(17, "cmx865a clk");
+	//gpio_request(14, "cmx865a simo");
+	//gpio_request(15, "cmx865a somi");
+	//gpio_request(16, "cmx865a cs");
+	//gpio_request(17, "cmx865a clk");
 	gpio_request(99, "qcx2101 lcs");
-	gpio_direction_output(14, 1);
-	gpio_direction_output(16, 1);
-	gpio_direction_output(17, 1);
+	//gpio_direction_output(14, 1);
+	//gpio_direction_output(16, 1);
+	//gpio_direction_output(17, 1);
 	gpio_direction_output(99, 1);
 //while(1);
     //gpio_request(18, "3G2 Reset");
@@ -1231,6 +1231,10 @@ static struct omap2_mcspi_device_config ads7846_mcspi_config = {
 	.turbo_mode	= 0,
 	.single_channel	= 1,	/* 0: slave, 1: master */
 };
+static struct omap2_mcspi_device_config cmx865a_mcspi_config = {
+	.turbo_mode	= 0,
+	.single_channel	= 1,	/* 0: slave, 1: master */
+};
 
 /*fram
 **------------------------------------------------------------------------------
@@ -1315,6 +1319,13 @@ struct spi_board_info omap3stalker_spi_board_info[] = {
 		.controller_data	= &ads7846_mcspi_config,
 		.irq			= OMAP_GPIO_IRQ(OMAP3_STALKER_TS_GPIO),
 		.platform_data		= &ads7846_config,
+	},
+	[1] = {
+		.modalias		= "cmx865a",
+		.bus_num		= 3,
+		.chip_select		= 0,
+		.max_speed_hz		= 150000,
+		.controller_data	= &cmx865a_mcspi_config,
 	},
 };
 
@@ -1409,6 +1420,11 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+//mcspi
+	OMAP3_MUX(ETK_D0, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
+	OMAP3_MUX(ETK_D1, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
+	OMAP3_MUX(ETK_D2, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
+	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	/*
 	OMAP3_MUX(MCSPI2_CLK, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
 	OMAP3_MUX(MCSPI2_CS0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
@@ -1455,8 +1471,8 @@ static void __init omap3_stalker_init(void)
 
 	platform_add_devices(omap3_stalker_devices, ARRAY_SIZE(omap3_stalker_devices));
 
-	//dillon spi_register_board_info(omap3stalker_spi_board_info,
-	//			ARRAY_SIZE(omap3stalker_spi_board_info));
+	spi_register_board_info(omap3stalker_spi_board_info,
+				ARRAY_SIZE(omap3stalker_spi_board_info));
 
 	omap_serial_init();
 

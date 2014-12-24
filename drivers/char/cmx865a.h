@@ -15,7 +15,7 @@ enum CID_recive_state
        Recived_02,
        Recived_long,
        Recived_num,
-}CID_state=0;
+};
 #define	G_Reset_Command_addr	0x01
 #define	G_Control_Command_addr	0xe0
 #define	Transmit_Mode_addr	0xe1
