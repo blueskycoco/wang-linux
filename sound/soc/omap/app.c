@@ -315,7 +315,6 @@ int voice_route(int s,int t)
 	print_system_status(system(command));
 	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",t,s);
 	print_system_status(system(command));
-	printf("second result %d\r\n",result);
 	return 0;	
 }
 int voip_route()
@@ -324,12 +323,11 @@ int voip_route()
 	int result;
 	kill_sound_task();
 	memset(command,'\0',sizeof(char)*256);
-	sprintf(command,"/usr/local/alsa/bin/sipvg |/usr/local/alsa/bin/aplay -D plughw:0,2&");
+	sprintf(command,"/usr/local/alsa/bin/sipvg 1|/usr/local/alsa/bin/aplay -D plughw:0,2&");
 	printf("first to exec %s\r\n",command);
 	print_system_status(system(command));
-	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",t,s);
+	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/sipvg 0&");
 	print_system_status(system(command));
-	printf("second result %d\r\n",result);
 }
 int open_record()
 {
