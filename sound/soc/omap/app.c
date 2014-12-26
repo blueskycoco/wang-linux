@@ -7,6 +7,9 @@
 #include <unistd.h>
 #include <termios.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <dirent.h>
+
 int g_fd_1,g_fd_2;
 char phone_in[100][20];
 char phone_out[100][20];
@@ -100,7 +103,6 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 int open_port(int comport)
 {
 	int fd;
-	char *dev[]={"/dev/tts/0","/dev/tts/1","/dev/tts/2"};
 	long  vdisable;
 	if (comport==0)
 	{	
@@ -181,55 +183,139 @@ int phone_process(int fd,int type,char *phone_number)
 	}
 	return 0;
 }
-int wait_phone_call(int fd , char **out)
+int wait_phone_call(char **out)
 {
 	char buf[256],*buf2;
 	char ch;
-	int i=0,j=0,result=0;
+	int i=0,j=0;
 	memset(buf,'\0',256);
-	while(read(fd,&ch,1)==1)
+	//check Calling in from 3G1
+	while(read(g_fd_1,&ch,1)==1)
 	{
 		buf[i++]=ch;
 	}
-	if(i==0)
-		return 0; 
-	buf[i]='\0';
-	printf("3G in %s\r\n",buf);
-	if(strncmp(buf,"\r\nRING",6)==0)
+	if(i!=0)
 	{
+		buf[i]='\0';
+		printf("3G in %s\r\n",buf);
+		if(strncmp(buf,"\r\nRING",6)==0)
+		{
+			*out=(char *)malloc(20*sizeof(char));
+			buf2=*out;  
+			memset(buf2,'\0',20);
+			i=0;
+			while(buf[i]!='\"')
+			{
+				i++;
+			}
+			i++;
+			while(buf[i]!='\"')
+				buf2[j++]=buf[i++];
+			buf2[j]='\0';
+			printf("Calling in 3G1 %s\r\n",buf2);
+			return 1;
+		}
+		else
+			printf("no Ring in from 3g1\r\n");
+	}
+	//check Calling in from PSTN
+	i=0;
+	int fd_pstn = open( "/dev/cmx865a0", O_RDWR|O_NOCTTY|O_NDELAY);
+	if (-1 == fd_pstn){
+		perror("Can't Open PSTN");
+	}
+	else 
+		printf("open PSTN .....\n");
+	while(read(fd_pstn,&ch,1)==1)
+	{
+		buf[i++]=ch;
+	}
+	close(fd_pstn);
+	if(i!=0)
+	{
+		buf[i]='\0';
 		*out=(char *)malloc(20*sizeof(char));
 		buf2=*out;  
 		memset(buf2,'\0',20);
-		result=1;
-		i=0;
-		while(buf[i]!='\"')
-		{
-			i++;
-		}
-		i++;
-		while(buf[i]!='\"')
-			buf2[j++]=buf[i++];
+		memcpy(*out,buf,strlen(buf));
+		buf2[strlen(buf)]='\0';
+		printf("Calling in PSTN %s\r\n",buf);
+		return 2;
 	}
-	else
-		printf("no Ring in\r\n");
-	if(result==1){
-		buf2[j]='\0';
-		printf("Calling in %s\r\n",buf2);
-	}
-	return result;
+	//check Calling in from VOIP
+	
+	return 0;
 }
+void print_system_status(int status)
+{
+	printf("status = %d\n",status);
+	if(WIFEXITED(status))
+	{
+		printf("normal termination,exit status = %d\n",WEXITSTATUS(status));
+	}
+	else if(WIFSIGNALED(status))
+	{
+		printf("abnormal termination,signal number =%d%s\n",
+		WTERMSIG(status),
+#ifdef WCOREDUMP
+		WCOREDUMP(status)?"core file generated" : "");
+#else
+		"");
+#endif
+	}
+}
+void kill_sound_task()
+{
+	DIR *dir;
+	struct dirent *ptr;
+	FILE *fp;
+	char kill_cmd[256];
+	char filepath[50];
+	char cur_task_name[50];
+	char buf[256];
+	dir = opendir("/proc");
+	if (NULL != dir)
+	{
+		while ((ptr = readdir(dir)) != NULL)
+		{
+			if((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0))             
+				continue;
+			if(DT_DIR != ptr->d_type) 
+				continue;
+			sprintf(filepath, "/proc/%s/status", ptr->d_name);
+			fp = fopen(filepath, "r");
+			if (NULL != fp)
+			{
+				if( fgets(buf, 256-1, fp)== NULL )
+				{
+					fclose(fp);
+					continue;
+				}
+				sscanf(buf, "%*s %s", cur_task_name);
+				if (!strcmp("arecord", cur_task_name)||!strcmp("aplay", cur_task_name))
+				{
+					printf("PID:  %s\n", ptr->d_name);
+					sprintf(kill_cmd,"kill -f %d",ptr->d_name);
+					print_system_status(system(kill_cmd));
+				}
+				fclose(fp);
+			}
+		}
+	closedir(dir);
+	}
+ }
+
 int voice_route(int s,int t)
 {
 	char command[256];
 	int result;
+	kill_sound_task();
 	memset(command,'\0',sizeof(char)*256);
 	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",s,t);
 	printf("first to exec %s\r\n",command);
-	result = system(command);
-	printf("First result %d\r\n",result);
-	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d",t,s);
-	printf("second to exec %s\r\n",command);
-	result = system(command);
+	print_system_status(system(command));
+	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",t,s);
+	print_system_status(system(command));
 	printf("second result %d\r\n",result);
 	return 0;	
 }
@@ -239,8 +325,7 @@ int open_record()
 	int result;
 	sprintf(command,"%s","/usr/local/alsa/bin/amixer -c 0 sset \'Analog Right Sub Mic\' cap");
 	printf("open_record %s\r\n",command);
-	result=system(command);
-	printf("open_record result %d\r\n",result);
+	print_system_status(system(command));
 	return result;
 }
 int main(int argc,char *argv[])
@@ -253,19 +338,19 @@ int main(int argc,char *argv[])
 	open_record();
 	if((g_fd_1=open_port(1))<0){
 		perror("open_port error 1");
-		return;
+		return -1;
 	}
 	if(set_opt(g_fd_1,115200,8,'N',1)<0){
 		perror("set_opt error 1");
-		return;
+		return -1;
 	}
 	if((g_fd_2=open_port(2))<0){
 		perror("open_port error 2");
-		return;
+		return -1;
 	}
 	if(set_opt(g_fd_2,115200,8,'N',1)<0){
 		perror("set_opt error 2");
-		return;
+		return -1;
 	}
 	for(i=0;i<phone_map_len;i++)
 	{
@@ -274,7 +359,10 @@ int main(int argc,char *argv[])
 	}
 	fp=fopen("./phone.txt","r");
 	if(fp<0)
+	{
 		perror("open phone.txt failed\r\n");
+		return -1;
+	}
 	while(fread(&ch,sizeof(char),1,fp)==1)
 	{
 		if(ch==',')
@@ -307,11 +395,12 @@ int main(int argc,char *argv[])
 		printf("Phone[%d] in: %s <==> Phone[%d] out : %s\r\n",i,phone_in[i],i,phone_out[i]); 
 	}
 	phone_process(g_fd_1,1,NULL);
-	phone_process(g_fd_2,1,NULL);
+	//phone_process(g_fd_2,1,NULL);
 	/*wait for phone call in */
 	while(1)
 	{
-		if(wait_phone_call(g_fd_2,&in)==1)
+		int source=wait_phone_call(&in);
+		if(source!=0)
 		{
 			for(i=0;i<k;i++)
 			{
@@ -322,7 +411,7 @@ int main(int argc,char *argv[])
 					phone_process(g_fd_2,3,NULL);//accept call
 					phone_process(g_fd_1,0,phone_out[i]);//route to out call
 					/*record voice from g_fd_2 , play to g_fd_1 */
-					voice_route(1,0);
+					voice_route(source,0);
 					break;
 				}
 				if(i==k-1)
