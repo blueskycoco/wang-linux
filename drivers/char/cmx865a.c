@@ -21,12 +21,12 @@
 #include <asm/mach-types.h>
 #include <linux/spi/spi.h>
 #include "cmx865a.h"
-
+#define GPIO_SPI 0
 static char cmx865a_output_buffer[32];	/* Stores data to write out of device */
 struct spi_device g_spi;
 
 unsigned char phone_state;
-#if 0
+#if GPIO_SPI
 #define CLK_PIN 17
 #define MOSI_PIN 14
 #define MISO_PIN 15
@@ -99,7 +99,7 @@ unsigned char write_spi(unsigned char data)
 #endif
 void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 {
-#if 0
+#if GPIO_SPI
 	CS(0);
 	if(len==0)
 		write_spi(addr);
@@ -154,7 +154,7 @@ void write_cmx865a(unsigned char addr,unsigned short data,unsigned char len)
 }
 void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 {
-#if 0
+#if GPIO_SPI
 //	unsigned char i=0;
 	CS(0);
 	write_spi(addr);
@@ -409,8 +409,9 @@ static int __init cmx865a_init(void)
 		printk (KERN_WARNING "cmx865a: Couldn't register device 10, %d.\n", CMX865A_MINOR);
 		return -EBUSY;
 	}
+	#if !GPIO_SPI
 	spi_register_driver(&cmx865a_driver);
-
+	#endif
 	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
 	{
 		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
