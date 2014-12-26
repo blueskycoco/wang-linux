@@ -258,11 +258,7 @@ void print_system_status(int status)
 	{
 		printf("abnormal termination,signal number =%d%s\n",
 		WTERMSIG(status),
-#ifdef WCOREDUMP
 		WCOREDUMP(status)?"core file generated" : "");
-#else
-		"");
-#endif
 	}
 }
 void kill_sound_task()
