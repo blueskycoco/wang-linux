@@ -1324,7 +1324,7 @@ struct spi_board_info omap3stalker_spi_board_info[] = {
 		.modalias		= "cmx865a",
 		.bus_num		= 3,
 		.chip_select		= 0,
-		.max_speed_hz		= 150000,
+		.max_speed_hz		= 1500000,
 		.controller_data	= &cmx865a_mcspi_config,
 	},
 };
@@ -1422,7 +1422,7 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
 //mcspi
 	OMAP3_MUX(ETK_D0, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
-	OMAP3_MUX(ETK_D1, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
+	OMAP3_MUX(ETK_D1, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLDOWN),
 	OMAP3_MUX(ETK_D2, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	/*

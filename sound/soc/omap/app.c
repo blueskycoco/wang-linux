@@ -308,7 +308,6 @@ void kill_sound_task()
 int voice_route(int s,int t)
 {
 	char command[256];
-	int result;
 	kill_sound_task();
 	memset(command,'\0',sizeof(char)*256);
 	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",s,t);
@@ -318,6 +317,19 @@ int voice_route(int s,int t)
 	print_system_status(system(command));
 	printf("second result %d\r\n",result);
 	return 0;	
+}
+int voip_route()
+{
+	char command[256];
+	int result;
+	kill_sound_task();
+	memset(command,'\0',sizeof(char)*256);
+	sprintf(command,"/usr/local/alsa/bin/sipvg |/usr/local/alsa/bin/aplay -D plughw:0,2&");
+	printf("first to exec %s\r\n",command);
+	print_system_status(system(command));
+	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/aplay -D plughw:0,%d&",t,s);
+	print_system_status(system(command));
+	printf("second result %d\r\n",result);
 }
 int open_record()
 {
@@ -411,7 +423,10 @@ int main(int argc,char *argv[])
 					phone_process(g_fd_2,3,NULL);//accept call
 					phone_process(g_fd_1,0,phone_out[i]);//route to out call
 					/*record voice from g_fd_2 , play to g_fd_1 */
-					voice_route(source,0);
+					if(source!=3)
+						voice_route(source,0);
+					else
+						voip_route;
 					break;
 				}
 				if(i==k-1)
