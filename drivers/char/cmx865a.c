@@ -166,13 +166,7 @@ void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 	}
 	CS(1);
 #else
-unsigned char rx[5]={0,0,0,0,0};
-//tx[0]=addr;
-ssize_t status=spi_write_then_read(&g_spi, &addr, 1, data, len);
-//if(len==2)	
-//	printk("spi read  %d ==>%d %d\r\n",status,rx[0],rx[1]);
-//else
-//	printk("spi read  %d ==>%d\r\n",status,rx[0]);
+spi_write_then_read(&g_spi,&addr,1,data,len);
 #endif
 }
 
@@ -412,12 +406,12 @@ static int __init cmx865a_init(void)
 	#if !GPIO_SPI
 	spi_register_driver(&cmx865a_driver);
 	#endif
-	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
+	/*if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
 	{
 		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
-	}
+	}*/
 	
 	if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
 	{
