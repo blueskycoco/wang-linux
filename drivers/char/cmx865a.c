@@ -21,7 +21,7 @@
 #include <asm/mach-types.h>
 #include <linux/spi/spi.h>
 #include "cmx865a.h"
-#define GPIO_SPI 0
+#define GPIO_SPI 1
 static char cmx865a_output_buffer[32];	/* Stores data to write out of device */
 struct spi_device g_spi;
 
@@ -165,7 +165,9 @@ void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 	}
 	CS(1);
 #else
-spi_write_then_read(&g_spi,&addr,1,data,len);
+//spi_write_then_read(&g_spi,&addr,1,data,len);
+spi_write(&g_spi,&addr,1);
+spi_read(&g_spi,data,len);
 #endif
 }
 
@@ -178,6 +180,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned short CID_RX_count= 0;
 	static enum CID_recive_state CID_state=0;
 	read_cmx865a(Status_addr,&i,2);
+	printk("Status ==>%02x\r\n",i);
 	if(DTMF_MODE)
 	{
 		if(i&0x0020)//DTMF
@@ -214,7 +217,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 		{
 			
 			read_cmx865a(Receive_Data_addr,&j,1);
-			printk("%d==> %x\r\n",CID_state,j);
+			//printk("%d==> %x\r\n",CID_state,j);
 			//if(j>='0'&&j<='9')
 				//printk(">>%c\r\n",j);
 		switch(CID_state)
@@ -398,12 +401,12 @@ static int __init cmx865a_init(void)
 	#if !GPIO_SPI
 	spi_register_driver(&cmx865a_driver);
 	#endif
-	/*if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
+	if (request_irq (OMAP_GPIO_IRQ(103), cmx865a_irq_handler, IRQF_TRIGGER_FALLING,"cmx865a", NULL)) 
 	{
 		printk (KERN_WARNING "cmx865a: IRQ %d is not free.\n",OMAP_GPIO_IRQ(103));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
-	}*/
+	}
 	
 	if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
 	{
