@@ -36,7 +36,7 @@ void ms_delay(void)
 	//volatile int i,j;
 	//for(i=0;i<1000;i++)
 		//j=0;
-	udelay(100);
+	udelay(1);
 }
 void CLK(bool ctl)
 {
@@ -83,6 +83,7 @@ unsigned char write_spi(unsigned char data)
 		}
 		data <<= 1;  
 		CLK(0);
+		ms_delay();
 		ms_delay();
 		SDI = MISO();
 		Temp<<=1;
@@ -228,7 +229,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					if(k>2)
 					{
 						k=0;
-						printk("==>Recived_55\r\n");
+						//printk("==>Recived_55\r\n");
 						CID_state=Recived_55;
 					}
 				}
@@ -242,12 +243,12 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			{
 				if(j==0x02)
 				{
-				printk("==>Recived_02 1\r\n");
+				//printk("==>Recived_02 1\r\n");
 					CID_state=Recived_02;
 				}
 				else if(j==0x04)
 				{
-				printk("==>Recived_02 2\r\n");
+				//printk("==>Recived_02 2\r\n");
 					CID_state=Recived_02;
 				}
 				break;
@@ -263,7 +264,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					fsk_long=max_buff;
 				}
 				CID_RX_count=0;
-				printk("==>Recived_long\r\n");
+				//printk("==>Recived_long\r\n");
 				CID_state=Recived_long;
 				break;
 			}	
@@ -278,12 +279,15 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					CID_RX_count=max_buff-1;
 					}
 					*/
-					printk("Got FSK Num %d %c\r\n",j,j);
+					//printk("Got FSK Num %d %c\r\n",j,j);
 				}
 				else
 				{
 					CID_state=Waite;
-					printk("finish receive phone num\r\n");
+					printk("New coming call: ");
+					for(i=0;i<CID_RX_count;i++)
+						printk("%d",cmx865a_output_buffer[i]);
+					printk("\r\n");
 					//return IRQ_HANDLED;
 				}
 				break;
@@ -297,7 +301,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 }
 static irqreturn_t qcx2101_irq_handler (int irq, void *dev_id)
 {
-	//printk("New comming call ...\r\n");
+	printk("New comming call ...\r\n");
 	//cmx865a_irq_handler(irq,dev_id);
 	return IRQ_HANDLED;
 }
