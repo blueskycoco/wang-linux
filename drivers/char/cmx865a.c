@@ -165,9 +165,7 @@ void read_cmx865a(unsigned char addr,unsigned char* data,unsigned char len)
 	}
 	CS(1);
 #else
-//spi_write_then_read(&g_spi,&addr,1,data,len);
-spi_write(&g_spi,&addr,1);
-spi_read(&g_spi,data,len);
+spi_write_then_read(&g_spi,&addr,1,data,len);
 #endif
 }
 
@@ -180,7 +178,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned short CID_RX_count= 0;
 	static enum CID_recive_state CID_state=0;
 	read_cmx865a(Status_addr,&i,2);
-	printk("Status ==>%02x\r\n",i);
+	//printk("Status ==>%02x\r\n",i);
 	if(DTMF_MODE)
 	{
 		if(i&0x0020)//DTMF
@@ -423,7 +421,9 @@ static void __exit cmx865a_exit (void)
 	free_irq (OMAP_GPIO_IRQ(103), NULL);
 	free_irq (OMAP_GPIO_IRQ(100), NULL);
 	misc_deregister (&cmx865a_misc_device);
+	#if !GPIO_SPI
 	spi_unregister_driver(&cmx865a_driver);
+	#endif
 }
 
 
