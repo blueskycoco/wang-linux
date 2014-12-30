@@ -240,10 +240,11 @@ int wait_phone_call(char **out)
 		memcpy(*out,buf,strlen(buf));
 		buf2[strlen(buf)]='\0';
 		printf("Calling in PSTN %s\r\n",buf);
-		return 2;
+		return 3;
 	}
 	//check Calling in from VOIP
-	
+
+	//return 4;
 	return 0;
 }
 void print_system_status(int status)
@@ -257,11 +258,7 @@ void print_system_status(int status)
 	{
 		printf("abnormal termination,signal number =%d%s\n",
 		WTERMSIG(status),
-#ifdef WCOREDUMP
 		WCOREDUMP(status)?"core file generated" : "");
-#else
-		"");
-#endif
 	}
 }
 void kill_sound_task()
@@ -292,7 +289,7 @@ void kill_sound_task()
 					continue;
 				}
 				sscanf(buf, "%*s %s", cur_task_name);
-				if (!strcmp("arecord", cur_task_name)||!strcmp("aplay", cur_task_name))
+				if (!strcmp("arecord", cur_task_name)||!strcmp("aplay", cur_task_name)||!strcmp("sipvg", cur_task_name))
 				{
 					printf("PID:  %s\n", ptr->d_name);
 					sprintf(kill_cmd,"kill -f %d",ptr->d_name);
@@ -326,7 +323,7 @@ int voip_route()
 	sprintf(command,"/usr/local/alsa/bin/sipvg 1|/usr/local/alsa/bin/aplay -D plughw:0,2&");
 	printf("first to exec %s\r\n",command);
 	print_system_status(system(command));
-	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,%d -r 8 -f S16_LE|/usr/local/alsa/bin/sipvg 0&");
+	sprintf(command,"/usr/local/alsa/bin/arecord -D plughw:0,2 -r 8 -f S16_LE|/usr/local/alsa/bin/sipvg 0&");
 	print_system_status(system(command));
 }
 int open_record()
@@ -421,10 +418,10 @@ int main(int argc,char *argv[])
 					phone_process(g_fd_2,3,NULL);//accept call
 					phone_process(g_fd_1,0,phone_out[i]);//route to out call
 					/*record voice from g_fd_2 , play to g_fd_1 */
-					if(source!=3)
-						voice_route(source,0);
+					if(source!=4)
+						voice_route(source,2);
 					else
-						voip_route;
+						voip_route();
 					break;
 				}
 				if(i==k-1)
