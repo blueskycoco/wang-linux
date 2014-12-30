@@ -794,7 +794,7 @@ static void __init omap3stalker_gpio_key(void)
 	//gpio_direction_output(16, 1);
 	//gpio_direction_output(17, 1);
 	gpio_direction_output(99, 1);
-//while(1);
+
     //gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
@@ -1424,7 +1424,7 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
-	OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+	//OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
 //mcspi
 	#if !GPIO_SPI
 	OMAP3_MUX(ETK_D0, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
@@ -1489,7 +1489,7 @@ static void __init omap3_stalker_init(void)
 	omap3stalker_flash_init();
 	ads7846_dev_init();
  	omap3stalker_init_eth();
-	omap3stalker_dc_init();
+	//omap3stalker_dc_init();
 	omap3_stalker_display_init();
 	omap3_stalker_backlight_init();
 	omap3_stalker_gpmc_uart_init();
