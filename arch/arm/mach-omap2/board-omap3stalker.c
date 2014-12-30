@@ -775,7 +775,7 @@ static void __init omap3stalker_gpio_key(void)
 	omap_mux_init_gpio(17, OMAP_PIN_OUTPUT);	
 	omap_mux_init_gpio(15, OMAP_PIN_INPUT);
 	#endif
-	omap_mux_init_gpio(101, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(104, OMAP_PIN_OUTPUT);
 	
     //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
     //omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
@@ -789,11 +789,11 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_request(16, "cmx865a cs");
 	gpio_request(17, "cmx865a clk");
 	#endif
-	gpio_request(101, "qcx2101 lcs 2");
+	gpio_request(104, "qcx2101 lcs 2");
 	//gpio_direction_output(14, 1);
 	//gpio_direction_output(16, 1);
 	//gpio_direction_output(17, 1);
-	gpio_direction_output(101, 1);
+	gpio_direction_output(104, 0);
 	//gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
