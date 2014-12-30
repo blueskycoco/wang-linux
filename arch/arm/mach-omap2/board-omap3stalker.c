@@ -775,8 +775,8 @@ static void __init omap3stalker_gpio_key(void)
 	omap_mux_init_gpio(17, OMAP_PIN_OUTPUT);	
 	omap_mux_init_gpio(15, OMAP_PIN_INPUT);
 	#endif
-	omap_mux_init_gpio(99, OMAP_PIN_OUTPUT);
-
+	omap_mux_init_gpio(101, OMAP_PIN_OUTPUT);
+	
     //omap_mux_init_gpio(18, OMAP_PIN_OUTPUT);
     //omap_mux_init_gpio(20, OMAP_PIN_OUTPUT);
 	gpio_request(140, "TLV320AIC12K Reset1");
@@ -789,13 +789,12 @@ static void __init omap3stalker_gpio_key(void)
 	gpio_request(16, "cmx865a cs");
 	gpio_request(17, "cmx865a clk");
 	#endif
-	gpio_request(99, "qcx2101 lcs");
+	gpio_request(101, "qcx2101 lcs 2");
 	//gpio_direction_output(14, 1);
 	//gpio_direction_output(16, 1);
 	//gpio_direction_output(17, 1);
-	gpio_direction_output(99, 1);
-
-    //gpio_request(18, "3G2 Reset");
+	gpio_direction_output(101, 1);
+	//gpio_request(18, "3G2 Reset");
     //gpio_request(20, "3G1 Reset");
     //for(i=0;i<5;i++){
     //gpio_direction_output(106, 0);	
@@ -1424,7 +1423,7 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
 	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
 	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
 	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE1 | OMAP_PIN_INPUT),
-	//OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+	/*OMAP3_MUX(CAM_D0, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),*/
 //mcspi
 	#if !GPIO_SPI
 	OMAP3_MUX(ETK_D0, OMAP_MUX_MODE1 | OMAP_PIN_OUTPUT),
