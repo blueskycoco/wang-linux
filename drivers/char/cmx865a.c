@@ -288,6 +288,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					for(i=0;i<CID_RX_count;i++)
 						printk("%d",cmx865a_output_buffer[i]);
 					printk("\r\n");
+					gpio_direction_output(104,1);
 					//return IRQ_HANDLED;
 				}
 				break;
