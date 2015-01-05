@@ -33,10 +33,10 @@ unsigned char phone_state;
 #define CS_PIN 16
 void ms_delay(void)
 {
-	//volatile int i,j;
-	//for(i=0;i<1000;i++)
-		//j=0;
-	udelay(1);
+	volatile int i,j;
+	for(i=0;i<1;i++)
+		j=0;
+	//udelay(1);
 }
 void CLK(bool ctl)
 {
@@ -302,7 +302,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 }
 static irqreturn_t qcx2101_irq_handler (int irq, void *dev_id)
 {
-	printk("New comming call ...\r\n");
+	//printk("New comming call ...\r\n");
 	//cmx865a_irq_handler(irq,dev_id);
 	return IRQ_HANDLED;
 }
