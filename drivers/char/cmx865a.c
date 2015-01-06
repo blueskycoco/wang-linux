@@ -24,7 +24,7 @@
 #define GPIO_SPI 1
 static char cmx865a_output_buffer[32];	/* Stores data to write out of device */
 struct spi_device g_spi;
-
+bool g_incoming_call=false;
 unsigned char phone_state;
 #if GPIO_SPI
 #define CLK_PIN 17
@@ -178,7 +178,10 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned short  fsk_long=0; 
 	static unsigned short CID_RX_count= 0;
 	static enum CID_recive_state CID_state=0;
-	read_cmx865a(Status_addr,&i,2);
+	read_cmx865a(Status_addr,&i,2);	
+	if(!g_incoming_call)
+		return IRQ_HANDLED;
+	
 	//printk("Status ==>%02x\r\n",i);
 	if(DTMF_MODE)
 	{
@@ -219,90 +222,93 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 			//printk("%d==> %x\r\n",CID_state,j);
 			//if(j>='0'&&j<='9')
 				//printk(">>%c\r\n",j);
-		switch(CID_state)
-		{
-			case Waite:
+			switch(CID_state)
 			{
-				if(j==0x55)
+				case Waite:
 				{
-					k++;
-					if(k>2)
+					if(j==0x55)
+					{
+						k++;
+						if(k>2)
+						{
+							k=0;
+							//printk("==>Recived_55\r\n");
+							CID_state=Recived_55;
+						}
+					}
+					else
 					{
 						k=0;
-						//printk("==>Recived_55\r\n");
-						CID_state=Recived_55;
 					}
+					break;
 				}
-				else
+				case Recived_55:
 				{
-					k=0;
-				}
-				break;
-			}
-			case Recived_55:
-			{
-				if(j==0x02)
-				{
-				//printk("==>Recived_02 1\r\n");
-					CID_state=Recived_02;
-				}
-				else if(j==0x04)
-				{
-				//printk("==>Recived_02 2\r\n");
-					CID_state=Recived_02;
-				}
-				break;
-			}
-			case Recived_02:
-			{
-				if(j<0x10)
-				{
-					fsk_long=j;
-				}
-				else
-				{
-					fsk_long=max_buff;
-				}
-				CID_RX_count=0;
-				//printk("==>Recived_long\r\n");
-				CID_state=Recived_long;
-				break;
-			}	
-			case Recived_long:
-			{
-				if(CID_RX_count<fsk_long)
-				{
-					cmx865a_output_buffer[CID_RX_count++]=j-'0';
-					/*
-					if(CID_RX_count==max_buff)
+					if(j==0x02)
 					{
-					CID_RX_count=max_buff-1;
+					//printk("==>Recived_02 1\r\n");
+						CID_state=Recived_02;
 					}
-					*/
-					//printk("Got FSK Num %d %c\r\n",j,j);
+					else if(j==0x04)
+					{
+					//printk("==>Recived_02 2\r\n");
+						CID_state=Recived_02;
+					}
+					break;
 				}
-				else
+				case Recived_02:
 				{
-					CID_state=Waite;
-					printk("New coming call: ");
-					for(i=0;i<CID_RX_count;i++)
-						printk("%d",cmx865a_output_buffer[i]);
-					printk("\r\n");
-					//return IRQ_HANDLED;
+					if(j<0x10)
+					{
+						fsk_long=j;
+					}
+					else
+					{
+						fsk_long=max_buff;
+					}
+					CID_RX_count=0;
+					//printk("==>Recived_long\r\n");
+					CID_state=Recived_long;
+					break;
+				}	
+				case Recived_long:
+				{
+					if(CID_RX_count<fsk_long)
+					{
+						cmx865a_output_buffer[CID_RX_count++]=j-'0';
+						/*
+						if(CID_RX_count==max_buff)
+						{
+						CID_RX_count=max_buff-1;
+						}
+						*/
+						//printk("Got FSK Num %d %c\r\n",j,j);
+					}
+					else
+					{
+						CID_state=Waite;
+						printk("New coming call: ");
+						for(i=0;i<CID_RX_count;i++)
+							printk("%d",cmx865a_output_buffer[i]);
+						printk("\r\n");
+						g_incoming_call=false;
+						//return IRQ_HANDLED;
+					}
+					break;
+				}	
+				default:
+					break;
 				}
-				break;
-			}	
-			default:
-				break;
 			}
 		}
-	}
 	return IRQ_HANDLED;
 }
 static irqreturn_t qcx2101_irq_handler (int irq, void *dev_id)
 {
 	//printk("New comming call ...\r\n");
 	//cmx865a_irq_handler(irq,dev_id);
+	if(!g_incoming_call)
+		g_incoming_call=true;
 	return IRQ_HANDLED;
 }
 
@@ -349,7 +355,7 @@ static int cmx865a_read (struct file *filp, char __user *buffer,
 	return (copy_to_user (buffer, &cmx865a_output_buffer, 32))
 		 ? -EFAULT : 32;
 }
-static int cmx865a_write (struct file *filp, char __user *buffer,
+static int qcx2101_lcs_ctl (struct file *filp, char __user *buffer,
 			size_t count, loff_t *ppos)
 {
 	char accept=0;
@@ -359,14 +365,14 @@ static int cmx865a_write (struct file *filp, char __user *buffer,
 		gpio_direction_output(104,1);
 	else
 		gpio_direction_output(104,0);
-	printk("%s the pstn call\r\n",accept?"reject":"accept");
+	printk("qcx2101_lcs_ctl==> %s the pstn call\r\n",accept?"reject":"accept");
 	return 0;
 }
 
 static const struct file_operations cmx865a_fops = {
 	.owner		= THIS_MODULE,
 	.read		= cmx865a_read,
-	.write		= cmx865a_write,
+	.write		= qcx2101_lcs_ctl,
 };
 
 static struct miscdevice cmx865a_misc_device = {
