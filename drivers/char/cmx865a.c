@@ -288,7 +288,6 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					for(i=0;i<CID_RX_count;i++)
 						printk("%d",cmx865a_output_buffer[i]);
 					printk("\r\n");
-					gpio_direction_output(104,1);
 					//return IRQ_HANDLED;
 				}
 				break;
@@ -350,10 +349,24 @@ static int cmx865a_read (struct file *filp, char __user *buffer,
 	return (copy_to_user (buffer, &cmx865a_output_buffer, 32))
 		 ? -EFAULT : 32;
 }
+static int cmx865a_write (struct file *filp, char __user *buffer,
+			size_t count, loff_t *ppos)
+{
+	char accept=0;
+	if(copy_from_user(&accept,buffer,sizeof(char)))
+		return -EFAULT;
+	if(accept==1)
+		gpio_direction_output(104,1);
+	else
+		gpio_direction_output(104,0);
+	printk("%s the pstn call\r\n",accept?"reject":"accept");
+	return 0;
+}
 
 static const struct file_operations cmx865a_fops = {
 	.owner		= THIS_MODULE,
 	.read		= cmx865a_read,
+	.write		= cmx865a_write,
 };
 
 static struct miscdevice cmx865a_misc_device = {
