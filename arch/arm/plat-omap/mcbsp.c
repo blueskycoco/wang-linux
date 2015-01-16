@@ -501,7 +501,8 @@ void omap_mcbsp_free(unsigned int id)
 		return;
 	}
 	mcbsp = id_to_mcbsp_ptr(id);
-
+	if(mcbsp->free)
+		return;
 	if (mcbsp->pdata && mcbsp->pdata->ops && mcbsp->pdata->ops->free)
 		mcbsp->pdata->ops->free(id);
 
@@ -618,6 +619,8 @@ void omap_mcbsp_stop(unsigned int id, int tx, int rx)
 
 	mcbsp = id_to_mcbsp_ptr(id);
 	io_base = mcbsp->io_base;
+	if(mcbsp->free)
+		return;
 
 	if (tx)
 		mcbsp->tx_started--;
