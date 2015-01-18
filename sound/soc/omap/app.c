@@ -149,10 +149,10 @@ int open_port(int comport)
 int phone_process(int fd,int type,char *phone_number)
 {
 	int nread,nwrite,i,j;
-	char buff0[3]="ATD";
-	char buff1[3]="ATA";
-	char buff2[7]="AT+CHUP";
-	char buff3[9]="AT+CLIP=1";
+	char buff0[4]="ATD";
+	char buff1[4]="ATA";
+	char buff2[8]="AT+CHUP";
+	char buff3[10]="AT+CLIP=1";
 	char end='\r';
 	char end_sent=';';
 	if(type==0)//call out
@@ -439,6 +439,6 @@ int main(int argc,char *argv[])
 //			printf("No call in ,waiting...\r\n");
 		}
 	}
-	return;
+	return 0;
 }
 
