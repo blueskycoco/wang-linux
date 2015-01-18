@@ -359,13 +359,28 @@ static int qcx2101_lcs_ctl (struct file *filp, char __user *buffer,
 			size_t count, loff_t *ppos)
 {
 	char accept=0;
+	static ctl=0;
 	if(copy_from_user(&accept,buffer,sizeof(char)))
 		return -EFAULT;
 	if(accept==1)
 		gpio_direction_output(104,1);
 	else
-		gpio_direction_output(104,0);
-	printk("qcx2101_lcs_ctl==> %s the pstn call\r\n",accept?"reject":"accept");
+	{
+		if(ctl==0)
+		{
+			gpio_direction_output(104,1);
+			
+			msleep(100);
+			gpio_direction_output(104,0);
+			ctl=1;
+		}
+		else
+		{
+			gpio_direction_output(104,0);
+			ctl=0;
+		}
+	}
+	printk("qcx2101_lcs_ctl==> %s the pstn call\r\n",accept?"accept":"reject");
 	return 0;
 }
 
