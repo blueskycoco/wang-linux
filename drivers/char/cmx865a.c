@@ -179,8 +179,8 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	static unsigned short CID_RX_count= 0;
 	static enum CID_recive_state CID_state=0;
 	read_cmx865a(Status_addr,&i,2);	
-	if(!g_incoming_call)
-		return IRQ_HANDLED;
+	//if(!g_incoming_call)
+		//return IRQ_HANDLED;
 	
 	//printk("Status ==>%02x\r\n",i);
 	if(DTMF_MODE)
@@ -445,12 +445,12 @@ static int __init cmx865a_init(void)
 		return -EIO;
 	}
 	
-	if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
+	/*if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
 	{
 		printk (KERN_WARNING "qcx2101: IRQ %d is not free.\n",OMAP_GPIO_IRQ(100));
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
-	}
+	}*/
 	cmx865a_hw_init();
 	return 0;
 }
@@ -458,7 +458,7 @@ static int __init cmx865a_init(void)
 static void __exit cmx865a_exit (void) 
 {
 	free_irq (OMAP_GPIO_IRQ(103), NULL);
-	free_irq (OMAP_GPIO_IRQ(100), NULL);
+	//free_irq (OMAP_GPIO_IRQ(100), NULL);
 	misc_deregister (&cmx865a_misc_device);
 	#if !GPIO_SPI
 	spi_unregister_driver(&cmx865a_driver);
