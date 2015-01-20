@@ -217,7 +217,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 	{
 		if(i&0x0040)//FSK
 		{
-			
+			udelay(1);
 			read_cmx865a(Receive_Data_addr,&j,1);
 			//printk("%d==> %x\r\n",CID_state,j);
 			//if(j>='0'&&j<='9')
