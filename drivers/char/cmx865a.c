@@ -275,7 +275,7 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 				{
 					if(CID_RX_count<fsk_long)
 					{
-						cmx865a_output_buffer[CID_RX_count++]=j-'0';
+						cmx865a_output_buffer[CID_RX_count++]=j;
 						/*
 						if(CID_RX_count==max_buff)
 						{
@@ -288,10 +288,10 @@ static irqreturn_t cmx865a_irq_handler (int irq, void *dev_id)
 					{
 						CID_state=Waite;
 						printk("New coming call: ");
-						for(i=0;i<CID_RX_count;i++)
-							printk("%d",cmx865a_output_buffer[i]);
+						//for(i=0;i<CID_RX_count;i++)
+							printk("%s",cmx865a_output_buffer);
 						printk("\r\n");
-						g_incoming_call=false;
+						g_incoming_call=true;
 						//return IRQ_HANDLED;
 					}
 					break;
@@ -307,8 +307,8 @@ static irqreturn_t qcx2101_irq_handler (int irq, void *dev_id)
 {
 	//printk("New comming call ...\r\n");
 	//cmx865a_irq_handler(irq,dev_id);
-	if(!g_incoming_call)
-		g_incoming_call=true;
+	//if(!g_incoming_call)
+		//g_incoming_call=true;
 	return IRQ_HANDLED;
 }
 
@@ -352,8 +352,20 @@ void cmx865a_hw_init(void)
 static int cmx865a_read (struct file *filp, char __user *buffer,
 			size_t count, loff_t *ppos)
 {
-	return (copy_to_user (buffer, &cmx865a_output_buffer, 32))
-		 ? -EFAULT : 32;
+	int len=strlen(cmx865a_output_buffer);
+	//printk("cmx865a_read len %d\r\n",len);
+	if(len!=0&&g_incoming_call)
+	{
+		copy_to_user(buffer,cmx865a_output_buffer,len);
+		printk("Len %d Phone:%s\r\n",len,cmx865a_output_buffer);
+		memset(cmx865a_output_buffer,'\0',32);
+		g_incoming_call=false;
+		return len;
+	}
+	else
+		return 0;
+	//return (copy_to_user (buffer, &cmx865a_output_buffer, 32))
+		// ? -EFAULT : 32;
 }
 static int qcx2101_lcs_ctl (struct file *filp, char __user *buffer,
 			size_t count, loff_t *ppos)
@@ -444,7 +456,7 @@ static int __init cmx865a_init(void)
 		misc_deregister (&cmx865a_misc_device);
 		return -EIO;
 	}
-	
+	memset(cmx865a_output_buffer,'\0',32);
 	/*if (request_irq (OMAP_GPIO_IRQ(100), qcx2101_irq_handler, IRQF_TRIGGER_FALLING,"qcx2101", NULL)) 
 	{
 		printk (KERN_WARNING "qcx2101: IRQ %d is not free.\n",OMAP_GPIO_IRQ(100));
